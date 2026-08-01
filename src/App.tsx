@@ -12,10 +12,11 @@ import {
   HomePage,
   LevelSelect,
   LoadingScreen,
+  StoryIntro,
   type GameSettings,
 } from './ui';
 
-type Screen = 'loading' | 'home' | 'customize' | 'levels' | 'play';
+type Screen = 'loading' | 'home' | 'customize' | 'story' | 'levels' | 'play';
 
 const DEFAULT_SETTINGS: GameSettings = {
   soundEnabled: true,
@@ -28,7 +29,7 @@ export default function App() {
   const [levelId, setLevelId] = useState(Level1.id);
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
   const [dragonLook, setDragonLook] = useState<DragonLook>(DEFAULT_DRAGON_LOOK);
-  const [afterCustomize, setAfterCustomize] = useState<'play' | 'home'>('play');
+  const [afterCustomize, setAfterCustomize] = useState<'story' | 'home'>('story');
 
   useEffect(() => {
     let active = true;
@@ -66,7 +67,7 @@ export default function App() {
           soundEngine.unlock();
           soundEngine.play('uiClick');
           setLevelId(Level1.id);
-          setAfterCustomize('play');
+          setAfterCustomize('story');
           setScreen('customize');
         }}
         onCustomize={() => {
@@ -92,11 +93,24 @@ export default function App() {
         onConfirm={(look) => {
           soundEngine.play('uiClick');
           setDragonLook(look);
-          if (afterCustomize === 'play') {
-            setScreen('play');
+          if (afterCustomize === 'story') {
+            setScreen('story');
           } else {
             setScreen('home');
           }
+        }}
+      />
+    );
+  }
+
+  if (screen === 'story') {
+    return (
+      <StoryIntro
+        dragonName={dragonLook.name}
+        onNext={() => {
+          soundEngine.play('uiClick');
+          setLevelId(Level1.id);
+          setScreen('play');
         }}
       />
     );

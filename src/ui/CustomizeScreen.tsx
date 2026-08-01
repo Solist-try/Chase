@@ -153,7 +153,7 @@ export function CustomizeScreen({
               maxLength={MAX_DRAGON_NAME_LENGTH}
               spellCheck={false}
               autoComplete="off"
-              placeholder="Sparky"
+              placeholder="Cruul"
               onChange={(event) => setName(event.target.value)}
             />
             <small>{name.trim().length}/{MAX_DRAGON_NAME_LENGTH}</small>

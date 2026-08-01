@@ -129,7 +129,7 @@ export const DRAGON_ACCESSORIES: readonly DragonAccessory[] = [
 ] as const;
 
 export const DEFAULT_DRAGON_LOOK: DragonLook = {
-  name: 'Sparky',
+  name: 'Cruul',
   colorId: 'emerald',
   accessoryId: 'none',
 };
