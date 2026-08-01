@@ -1,13 +1,12 @@
-/**
- * Home page buttons for Dragon Adventure!
- * Start Game → game.html
- * Settings → settings.html
- */
+(function setupHome() {
+  const startBtn = document.getElementById('startBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
 
-document.getElementById('startBtn').onclick = () => {
-  window.location.href = 'game.html';
-};
+  if (startBtn) {
+    startBtn.onclick = () => navigateTo('story');
+  }
 
-document.getElementById('settingsBtn').onclick = () => {
-  window.location.href = 'settings.html';
-};
+  if (settingsBtn) {
+    settingsBtn.onclick = () => navigateTo('settings');
+  }
+})();

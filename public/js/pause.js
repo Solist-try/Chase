@@ -1,17 +1,24 @@
-/**
- * Pause menu buttons for Dragon Adventure!
- * Resume / Restart → game.html
- * Home → home.html
- */
+(function setupPause() {
+  const resumeBtn = document.getElementById('resumeBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const homeBtn = document.getElementById('homeBtn');
 
-document.getElementById('resumeBtn').onclick = () => {
-  window.location.href = 'game.html';
-};
+  if (resumeBtn) {
+    resumeBtn.onclick = () => navigateTo('game');
+  }
 
-document.getElementById('restartBtn').onclick = () => {
-  window.location.href = 'game.html';
-};
+  if (restartBtn) {
+    restartBtn.onclick = () => {
+      try {
+        sessionStorage.setItem('dragonAdventureRestart', '1');
+      } catch {
+        // ignore storage failures
+      }
+      navigateTo('game');
+    };
+  }
 
-document.getElementById('homeBtn').onclick = () => {
-  window.location.href = 'home.html';
-};
+  if (homeBtn) {
+    homeBtn.onclick = () => navigateTo('home');
+  }
+})();

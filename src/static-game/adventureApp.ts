@@ -1,6 +1,6 @@
 /**
- * Static HTML game page — wires the real engine from src/engine
- * into public/game.html (canvas + HUD + pause menu).
+ * Static HTML game screen — wires the real engine from src/engine
+ * into the router's game screen (canvas + optional HUD).
  */
 import { Camera } from '@engine/Camera';
 import {
@@ -32,11 +32,58 @@ export interface AdventureHudElements {
   pauseMenu: HTMLElement | null;
 }
 
+export interface StartAdventureOptions {
+  restart?: boolean;
+}
+
+declare global {
+  interface Window {
+    navigateTo?: (routeName: string) => void | Promise<void>;
+    __stopAdventure?: (() => void) | null;
+  }
+}
+
+function goToRoute(routeName: string, fallbackPath: string): void {
+  if (typeof window.navigateTo === 'function') {
+    void window.navigateTo(routeName);
+    return;
+  }
+  window.location.href = fallbackPath;
+}
+
+function resolveHud(
+  canvasOrHud: HTMLCanvasElement | AdventureHudElements,
+): AdventureHudElements {
+  if (canvasOrHud instanceof HTMLCanvasElement) {
+    return {
+      canvas: canvasOrHud,
+      levelName: document.getElementById('level-name'),
+      levelGoal: document.getElementById('level-goal'),
+      starCount: document.getElementById('star-count'),
+      starTotal: document.getElementById('star-total'),
+      coinCount: document.getElementById('coin-count'),
+      coinTotal: document.getElementById('coin-total'),
+      pauseButton: document.getElementById('pauseBtn') as HTMLButtonElement | null,
+      resumeButton: document.getElementById('resumeBtn') as HTMLButtonElement | null,
+      restartButton: document.getElementById(
+        'restartBtn',
+      ) as HTMLButtonElement | null,
+      pauseMenu: document.getElementById('pause-menu'),
+    };
+  }
+  return canvasOrHud;
+}
+
 /**
  * Start Level 1 on the static game page.
+ * Accepts a canvas element or a full HUD object.
  * Returns a cleanup function that stops the engine.
  */
-export function startStaticAdventure(hud: AdventureHudElements): () => void {
+export function startStaticAdventure(
+  canvasOrHud: HTMLCanvasElement | AdventureHudElements,
+  _options: StartAdventureOptions = {},
+): () => void {
+  const hud = resolveHud(canvasOrHud);
   const { canvas } = hud;
 
   // Keep the canvas crisp on retina screens.
@@ -56,7 +103,7 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
 
   let renderer: Renderer | null = null;
 
-  // Fill level name / goal / totals once at start.
+  // Fill level name / goal / totals once at start (when HUD nodes exist).
   updateLevelLabels(hud, level.config.name, level.config.goal.description);
   updateHudCounters(hud, level.getState());
 
@@ -70,10 +117,10 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
     logicalHeight: VIEW_HEIGHT,
     targetFps: 60,
     onPauseChange: (paused) => {
-      // Esc / P → open the standalone pause page (same as the Pause button).
+      // Esc / P → open the pause screen via the router.
       if (paused) {
         soundEngine.stopMusic();
-        window.location.href = 'pause.html';
+        goToRoute('pause', 'pause.html');
         return;
       }
       showPauseMenu(hud, false);
@@ -104,15 +151,13 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
     },
   });
 
-  // Optional overlay controls (used only if those elements exist).
-  hud.pauseButton?.addEventListener('click', () => {
-    window.location.href = 'pause.html';
-  });
+  // Optional in-page pause overlay (used only if those elements exist).
+  // The Pause button itself is wired by public/js/game.js via navigateTo.
   hud.resumeButton?.addEventListener('click', () => {
     gameEngine.setPaused(false);
   });
   hud.restartButton?.addEventListener('click', () => {
-    window.location.href = 'game.html';
+    goToRoute('game', 'game.html');
   });
 
   // Re-scale when the window size changes.

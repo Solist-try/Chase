@@ -1,20 +1,12 @@
-/**
- * Story page script
- * Next → load game.html (Level 1)
- */
+(function setupStory() {
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
 
-function goToGame() {
-  window.location.href = 'game.html';
-}
-
-function setupNextButton() {
-  var nextButton = document.getElementById('next-button');
-
-  if (!nextButton) {
-    return;
+  if (nextBtn) {
+    nextBtn.onclick = () => navigateTo('game');
   }
 
-  nextButton.addEventListener('click', goToGame);
-}
-
-document.addEventListener('DOMContentLoaded', setupNextButton);
+  if (backBtn) {
+    backBtn.onclick = () => navigateTo('home');
+  }
+})();

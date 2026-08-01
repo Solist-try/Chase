@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const src = fileURLToPath(new URL('./src', import.meta.url));
+const appHtml = fileURLToPath(new URL('./app.html', import.meta.url));
 
 const aliases = {
   '@': src,
@@ -15,12 +16,12 @@ const aliases = {
 };
 
 /**
- * After the main build copies public/js/game.js (dev loader),
- * replace it with a bundled entry that includes src/engine.
+ * After the main build, bundle the static adventure engine for
+ * public/js/game.js to import in production (router game screen).
  */
-function bundleStaticGamePage(): Plugin {
+function bundleStaticAdventure(): Plugin {
   return {
-    name: 'bundle-static-game-page',
+    name: 'bundle-static-adventure',
     apply: 'build',
     async closeBundle() {
       const { build } = await import('vite');
@@ -32,12 +33,14 @@ function bundleStaticGamePage(): Plugin {
         build: {
           emptyOutDir: false,
           outDir: 'dist',
+          lib: {
+            entry: `${src}/static-game/build-entry.ts`,
+            formats: ['es'],
+            fileName: () => 'assets/static-adventure.js',
+          },
           rollupOptions: {
-            input: `${src}/static-game/build-entry.ts`,
             output: {
-              format: 'es',
-              entryFileNames: 'js/game.js',
-              chunkFileNames: 'js/chunks/[name]-[hash].js',
+              chunkFileNames: 'assets/chunks/[name]-[hash].js',
               assetFileNames: 'assets/[name]-[hash][extname]',
             },
           },
@@ -48,10 +51,18 @@ function bundleStaticGamePage(): Plugin {
 }
 
 export default defineConfig({
-  // Serve files from public/ at the site root (/home.html, /game.html, …).
+  // Serve files from public/ at the site root (/screens/…, /js/…, /css/…).
   publicDir: 'public',
-  plugins: [react(), bundleStaticGamePage()],
+  plugins: [react(), bundleStaticAdventure()],
   resolve: {
     alias: aliases,
+  },
+  build: {
+    rollupOptions: {
+      // React app lives at /app.html; router shell is copied from public/index.html.
+      input: {
+        app: appHtml,
+      },
+    },
   },
 });
