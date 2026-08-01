@@ -1,8 +1,8 @@
 import { rectsOverlap } from '@engine/collisions';
 import type { Rect } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
+import { soundEngine } from '@engine/SoundEngine';
 import type { CollectibleKind, CollectibleSpawn } from '@levels/types';
-import { playSound } from '@ui/sound';
 import type { Dragon } from './Dragon';
 
 export type { CollectibleSpawn };
@@ -107,15 +107,7 @@ export class Collectible {
   }
 
   private playCollectSound(): void {
-    if (this.kind === 'heart') {
-      playSound('collectHeart', 0.4);
-      return;
-    }
-    if (this.isGem) {
-      playSound('collectGem', 0.4);
-      return;
-    }
-    playSound('collectStar', 0.4);
+    soundEngine.playCollect(this.kind === 'coin' ? 'gem' : this.kind);
   }
 
   private drawStar(ctx: CanvasRenderingContext2D, x: number, y: number): void {

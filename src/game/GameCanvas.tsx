@@ -3,6 +3,7 @@ import { Camera } from '@engine/Camera';
 import { GameEngine } from '@engine/GameEngine';
 import { Renderer } from '@engine/Renderer';
 import type { InputManager } from '@engine/Input';
+import { soundEngine } from '@engine/SoundEngine';
 import { Dragon } from '@characters/Dragon';
 import type { NPC } from '@characters/NPC';
 import { getNextLevelId, loadLevel } from '@levels/LevelLoader';
@@ -117,11 +118,22 @@ export function GameCanvas({
     setStats({ ...dragon.stats });
     setLevelState(level.getState());
 
+    soundEngine.setEnabled(settings.soundEnabled);
+    soundEngine.unlock();
+    soundEngine.playMusic('cheerful');
+
     const engine = new GameEngine({
       canvas,
       clearColor: theme.background,
       difficulty: difficultyOverrides(settings),
-      onPauseChange: (value) => setPaused(value),
+      onPauseChange: (value) => {
+        setPaused(value);
+        if (value) {
+          soundEngine.stopMusic();
+        } else if (settings.soundEnabled) {
+          soundEngine.playMusic('cheerful');
+        }
+      },
       onUpdate: (dt, input, eng) => {
         if (dialogueRef.current) return;
 
@@ -181,6 +193,7 @@ export function GameCanvas({
 
     return () => {
       engine.stop();
+      soundEngine.stopMusic();
       engineRef.current = null;
       inputRef.current = null;
       levelRef.current = null;

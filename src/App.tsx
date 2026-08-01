@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { soundEngine } from '@engine/SoundEngine';
 import { Level1 } from '@levels/Level1';
 import { GameCanvas } from './game/GameCanvas';
 import {
@@ -6,7 +7,6 @@ import {
   LevelSelect,
   type GameSettings,
 } from './ui';
-import { playSound, setSoundEnabled } from './ui/sound';
 
 type Screen = 'home' | 'levels' | 'play';
 
@@ -21,7 +21,10 @@ export default function App() {
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
 
   const updateSettings = (next: GameSettings) => {
-    setSoundEnabled(next.soundEnabled);
+    soundEngine.setEnabled(next.soundEnabled);
+    if (next.soundEnabled) {
+      soundEngine.unlock();
+    }
     setSettings(next);
   };
 
@@ -31,12 +34,14 @@ export default function App() {
         settings={settings}
         onSettingsChange={updateSettings}
         onStart={() => {
-          playSound('uiClick');
+          soundEngine.unlock();
+          soundEngine.play('uiClick');
           setLevelId(Level1.id);
           setScreen('play');
         }}
         onChooseLevel={() => {
-          playSound('uiClick');
+          soundEngine.unlock();
+          soundEngine.play('uiClick');
           setScreen('levels');
         }}
       />
@@ -48,6 +53,8 @@ export default function App() {
       <LevelSelect
         onBack={() => setScreen('home')}
         onPick={(id) => {
+          soundEngine.unlock();
+          soundEngine.play('uiClick');
           setLevelId(id);
           setScreen('play');
         }}
@@ -59,7 +66,10 @@ export default function App() {
     <GameCanvas
       levelId={levelId}
       settings={settings}
-      onQuit={() => setScreen('home')}
+      onQuit={() => {
+        soundEngine.stopMusic();
+        setScreen('home');
+      }}
       onLevelChange={(id) => setLevelId(id)}
     />
   );

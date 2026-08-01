@@ -115,7 +115,7 @@ export function HomePage({
                   onSettingsChange({ ...settings, soundEnabled: true })
                 }
               >
-                On
+                Unmute
               </button>
               <button
                 type="button"
@@ -124,7 +124,7 @@ export function HomePage({
                   onSettingsChange({ ...settings, soundEnabled: false })
                 }
               >
-                Off
+                Mute
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { CollisionEngine, type PlatformCollisionResult } from './CollisionEngine
 import { Controls, DASH_CONFIG } from './controls';
 import { InputManager } from './Input';
 import { integrate } from './physics';
+import { soundEngine } from './SoundEngine';
 import type { InputState, PhysicsBody, Rect } from './types';
 
 /**
@@ -298,6 +299,7 @@ export class GameEngine {
       memory.coyoteTimer = 0;
       memory.jumpHeld = true;
       this.controls.consumeJumpBuffer();
+      soundEngine.playJump();
     }
 
     // Variable jump: release Space early → shorter hop

@@ -25,3 +25,9 @@ export {
   type KidsDifficulty,
   type GameEngineOptions,
 } from './GameEngine';
+export {
+  SoundEngine,
+  soundEngine,
+  type SfxName,
+  type MusicTrack,
+} from './SoundEngine';

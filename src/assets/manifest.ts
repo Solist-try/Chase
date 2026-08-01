@@ -16,8 +16,10 @@ import menuBackground from './backgrounds/menu.svg';
 import collectStarSound from './sounds/collect-star.wav';
 import collectGemSound from './sounds/collect-gem.wav';
 import collectHeartSound from './sounds/collect-heart.wav';
+import jumpSound from './sounds/jump.wav';
 import talkBlipSound from './sounds/talk-blip.wav';
 import uiClickSound from './sounds/ui-click.wav';
+import cheerfulLoop from './sounds/cheerful-loop.wav';
 import meadowTheme from './sounds/meadow-theme.wav';
 import forestTheme from './sounds/forest-theme.wav';
 
@@ -36,11 +38,13 @@ export const backgrounds = {
 } as const;
 
 export const sounds = {
+  jump: jumpSound,
   collectStar: collectStarSound,
   collectGem: collectGemSound,
   collectHeart: collectHeartSound,
   talkBlip: talkBlipSound,
   uiClick: uiClickSound,
+  cheerfulLoop,
   meadowTheme,
   forestTheme,
 } as const;

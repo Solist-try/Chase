@@ -1,26 +1,18 @@
-import { sounds } from '@assets/manifest';
+import { soundEngine, type SfxName } from '@engine/SoundEngine';
 
-let enabled = true;
-
+/** Mirror mute state into the shared SoundEngine. */
 export function setSoundEnabled(value: boolean): void {
-  enabled = value;
+  soundEngine.setEnabled(value);
 }
 
 export function isSoundEnabled(): boolean {
-  return enabled;
+  return soundEngine.isEnabled();
 }
 
 /** Play a short UI / game blip when sound is on. */
-export function playSound(
-  key: keyof typeof sounds,
-  volume = 0.35,
-): void {
-  if (!enabled) return;
-  try {
-    const audio = new Audio(sounds[key]);
-    audio.volume = volume;
-    void audio.play();
-  } catch {
-    // Autoplay / missing asset — ignore quietly for kids UX
-  }
+export function playSound(key: SfxName | 'collect', volume = 0.35): void {
+  soundEngine.unlock();
+  soundEngine.play(key, volume);
 }
+
+export { soundEngine };
