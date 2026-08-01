@@ -87,6 +87,7 @@ export function GameCanvas({
   const [goal, setGoal] = useState('');
   const [nearbyName, setNearbyName] = useState<string | null>(null);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
+  const [restartToken, setRestartToken] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -185,11 +186,19 @@ export function GameCanvas({
       window.removeEventListener('keyup', onKeyUp);
       dialogueRef.current?.npc.setTalking(false);
     };
-  }, [levelId, onLevelChange, settings]);
+  }, [levelId, onLevelChange, settings, restartToken]);
 
   const resume = () => {
     engineRef.current?.setPaused(false);
     setPaused(false);
+  };
+
+  const restartLevel = () => {
+    engineRef.current?.setPaused(false);
+    setPaused(false);
+    setDialogue(null);
+    dialogueRef.current = null;
+    setRestartToken((token) => token + 1);
   };
 
   const advanceDialogue = () => {
@@ -235,7 +244,13 @@ export function GameCanvas({
           onClose={closeDialogue}
         />
       ) : null}
-      {paused ? <PauseMenu onResume={resume} onQuit={onQuit} /> : null}
+      {paused ? (
+        <PauseMenu
+          onResume={resume}
+          onRestart={restartLevel}
+          onBackHome={onQuit}
+        />
+      ) : null}
       <TouchControls
         onChange={(partial) => inputRef.current?.setVirtual(partial)}
       />

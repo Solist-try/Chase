@@ -394,6 +394,115 @@
   gap: 0.65rem;
 }
 
+.pause-overlay {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(255, 77, 109, 0.28), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 80% 30%, rgba(0, 187, 249, 0.28), transparent 50%),
+    rgba(27, 42, 74, 0.42);
+}
+
+.pause-panel {
+  width: min(100%, 24rem);
+  padding: 1.6rem 1.5rem 1.4rem;
+  border-radius: 1.6rem;
+  border: 4px solid #1b2a4a;
+  background: #fffaf0;
+  text-align: center;
+  box-shadow: 0 12px 28px rgba(27, 42, 74, 0.2);
+  animation: pause-pop 0.28s ease-out both;
+}
+
+.pause-kicker {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(27, 42, 74, 0.7);
+}
+
+.pause-title {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 8vw, 3.2rem);
+  line-height: 1;
+  background: linear-gradient(
+    90deg,
+    #ff4d6d,
+    #ff9f1c,
+    #ffe566,
+    #80ed99,
+    #00bbf9,
+    #b5179e
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pause-copy {
+  margin: 0.65rem 0 1.25rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #243552;
+}
+
+.pause-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pause-btn {
+  appearance: none;
+  width: 100%;
+  border: 3px solid #1b2a4a;
+  border-radius: 1.15rem;
+  padding: 0.95rem 1.1rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 3.5vw, 1.55rem);
+  line-height: 1.1;
+  color: #1b2a4a;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #1b2a4a;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.pause-btn:hover {
+  transform: translateY(-2px);
+}
+
+.pause-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #1b2a4a;
+}
+
+.pause-btn--resume {
+  background: linear-gradient(90deg, #80ed99, #ffe566);
+}
+
+.pause-btn--restart {
+  background: linear-gradient(90deg, #00bbf9, #9bf6ff);
+}
+
+.pause-btn--home {
+  background: linear-gradient(90deg, #ff4d6d, #ff9f1c, #ffe566);
+}
+
+@keyframes pause-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .dialogue {
   position: absolute;
   left: 50%;
