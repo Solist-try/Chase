@@ -9,7 +9,7 @@ export const level1: LevelConfig = {
   height: 720,
   background: '#8fd3e8',
   groundColor: '#6fbf73',
-  spawn: { x: 80, y: 320 },
+  spawn: { x: 80, y: 620 },
   solids: [
     { rect: { x: 0, y: 0, width: 1280, height: 40 }, color: '#5aae61' },
     { rect: { x: 0, y: 680, width: 1280, height: 40 }, color: '#5aae61' },

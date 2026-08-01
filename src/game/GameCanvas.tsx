@@ -75,12 +75,12 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
       canvas,
       clearColor: level.config.background,
       onPauseChange: (value) => setPaused(value),
-      onUpdate: (dt, input) => {
+      onUpdate: (dt, input, eng) => {
         if (dialogueRef.current) return;
 
-        // Top-down adventure movement (current levels). Platform physics
-        // helpers live on GameEngine for side-scrolling stages.
-        dragon.update(dt, input, level.solids);
+        // Kid-tuned platformer physics + dragon animation sync.
+        eng.applyPlayerPhysics(dragon.body, input, level.solids, dt);
+        dragon.syncFromPhysics(dt, input);
         nearby = level.update(dt, dragon);
         camera.follow(dragon.center);
 

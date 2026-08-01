@@ -8,8 +8,8 @@ import type { InputState, PhysicsBody, Rect } from './types';
  * floaty jumps, coyote time, jump buffer, slow enemies.
  */
 export const KIDS_DIFFICULTY = {
-  /** Horizontal run speed (px/s). */
-  moveSpeed: 210,
+  /** Horizontal run speed (px/s). Slightly slower than a typical Mario-like (~220). */
+  moveSpeed: 190,
   /** Upward jump impulse (px/s). Higher = easier gaps. */
   jumpForce: 580,
   /** World gravity (px/s²). Lower = longer hang time. */
