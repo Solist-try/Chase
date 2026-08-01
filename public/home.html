@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dragon Adventure! — Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1b2a4a;
+        --paper: #fffaf0;
+        --start: #ffd166;
+        --settings: #9bf6ff;
+        --shadow: 0 10px 24px rgba(27, 42, 74, 0.14);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: 'Nunito', 'Fredoka', sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse 70% 45% at 15% 15%, rgba(255, 214, 120, 0.55), transparent 55%),
+          radial-gradient(ellipse 60% 50% at 85% 20%, rgba(0, 187, 249, 0.35), transparent 50%),
+          radial-gradient(ellipse 50% 40% at 50% 0%, rgba(255, 77, 109, 0.2), transparent 55%),
+          linear-gradient(180deg, #7ec8e3 0%, #b8f2c8 52%, #ffe566 100%);
+        background-attachment: fixed;
+      }
+
+      .page {
+        min-height: 100vh;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 1.25rem;
+        padding: clamp(1.25rem, 4vw, 2.75rem);
+        text-align: center;
+      }
+
+      .hero {
+        display: grid;
+        gap: 0.45rem;
+        justify-items: center;
+      }
+
+      .title {
+        margin: 0;
+        font-family: 'Fredoka', 'Nunito', sans-serif;
+        font-size: clamp(2.4rem, 9vw, 4.2rem);
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: 0.01em;
+      }
+
+      .title span {
+        display: inline-block;
+        animation: bounce-letter 1.8s ease-in-out infinite;
+      }
+
+      .title span:nth-child(1) { color: #ff4d6d; animation-delay: 0s; }
+      .title span:nth-child(2) { color: #ff9f1c; animation-delay: 0.05s; }
+      .title span:nth-child(3) { color: #ffe566; animation-delay: 0.1s; }
+      .title span:nth-child(4) { color: #80ed99; animation-delay: 0.15s; }
+      .title span:nth-child(5) { color: #00bbf9; animation-delay: 0.2s; }
+      .title span:nth-child(6) { color: #b5179e; animation-delay: 0.25s; }
+      .title span:nth-child(7) { color: #f72585; animation-delay: 0.3s; }
+      .title .space { width: 0.35em; }
+      .title span:nth-child(9) { color: #ff4d6d; animation-delay: 0.4s; }
+      .title span:nth-child(10) { color: #ff9f1c; animation-delay: 0.45s; }
+      .title span:nth-child(11) { color: #ffe566; animation-delay: 0.5s; }
+      .title span:nth-child(12) { color: #80ed99; animation-delay: 0.55s; }
+      .title span:nth-child(13) { color: #00bbf9; animation-delay: 0.6s; }
+      .title span:nth-child(14) { color: #b5179e; animation-delay: 0.65s; }
+      .title span:nth-child(15) { color: #f72585; animation-delay: 0.7s; }
+      .title span:nth-child(16) { color: #ff4d6d; animation-delay: 0.75s; }
+
+      .tagline {
+        margin: 0;
+        font-weight: 800;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        color: rgba(27, 42, 74, 0.82);
+      }
+
+      .mascot {
+        margin: 0.35rem 0;
+        max-width: 100%;
+      }
+
+      .mascot img,
+      .mascot svg {
+        display: block;
+        width: min(280px, 72vw);
+        height: auto;
+        margin-inline: auto;
+        filter: drop-shadow(0 12px 18px rgba(27, 42, 74, 0.16));
+        animation: bob 2.8s ease-in-out infinite;
+      }
+
+      .mascot figcaption {
+        margin-top: 0.4rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: rgba(27, 42, 74, 0.7);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        justify-content: center;
+      }
+
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 1.25rem;
+        min-width: 10.5rem;
+        padding: 0.95rem 1.5rem;
+        font-family: 'Fredoka', 'Nunito', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.03);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn:focus-visible {
+        outline: 3px solid #1b2a4a;
+        outline-offset: 3px;
+      }
+
+      .btn--start {
+        background: var(--start);
+      }
+
+      .btn--settings {
+        background: var(--settings);
+      }
+
+      .settings {
+        width: min(100%, 22rem);
+        padding: 1rem 1.15rem 1.1rem;
+        border-radius: 1.35rem;
+        background: rgba(255, 250, 240, 0.92);
+        box-shadow: var(--shadow);
+        text-align: left;
+      }
+
+      .settings[hidden] {
+        display: none;
+      }
+
+      .settings h2 {
+        margin: 0 0 0.65rem;
+        font-family: 'Fredoka', 'Nunito', sans-serif;
+        font-size: 1.35rem;
+      }
+
+      .settings p {
+        margin: 0 0 0.85rem;
+        font-weight: 700;
+        color: rgba(27, 42, 74, 0.78);
+      }
+
+      .settings .btn {
+        min-width: auto;
+        width: 100%;
+        background: #80ed99;
+      }
+
+      @keyframes bounce-letter {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+
+      @keyframes bob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+
+      @media (max-width: 420px) {
+        .actions {
+          width: 100%;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <h1 class="title" aria-label="Dragon Adventure!">
+          <span>D</span><span>r</span><span>a</span><span>g</span><span>o</span><span>n</span>
+          <span class="space" aria-hidden="true"> </span>
+          <span>A</span><span>d</span><span>v</span><span>e</span><span>n</span><span>t</span><span>u</span><span>r</span><span>e</span><span>!</span>
+        </h1>
+        <p class="tagline">A bright little quest for young explorers</p>
+      </header>
+
+      <main>
+        <figure class="mascot">
+          <!-- Cute dragon image placeholder (inline SVG until art is ready) -->
+          <svg
+            viewBox="0 0 280 220"
+            width="280"
+            height="220"
+            role="img"
+            aria-label="Cute dragon placeholder"
+          >
+            <title>Cute dragon placeholder</title>
+            <ellipse cx="140" cy="198" rx="70" ry="12" fill="rgba(27,42,74,0.12)" />
+            <path d="M88 110 C40 70 36 40 70 36 C86 56 92 82 96 108 Z" fill="#00BBF9" />
+            <path d="M192 110 C240 70 244 40 210 36 C194 56 188 82 184 108 Z" fill="#80ED99" />
+            <ellipse cx="130" cy="120" rx="58" ry="52" fill="#FF4D6D" />
+            <ellipse cx="140" cy="130" rx="42" ry="36" fill="#FFE566" />
+            <ellipse cx="188" cy="88" rx="36" ry="30" fill="#FF4D6D" />
+            <ellipse cx="210" cy="96" rx="18" ry="12" fill="#FF9F1C" />
+            <path d="M178 66 L186 38 L198 66 Z" fill="#B5179E" />
+            <circle cx="180" cy="84" r="7" fill="#FFFAF0" />
+            <circle cx="198" cy="82" r="7" fill="#FFFAF0" />
+            <circle cx="182" cy="84" r="3.2" fill="#1B2A4A" />
+            <circle cx="200" cy="82" r="3.2" fill="#1B2A4A" />
+            <circle cx="172" cy="96" r="5" fill="#FF85A1" />
+            <circle cx="208" cy="94" r="5" fill="#FF85A1" />
+            <path
+              d="M186 100 Q198 110 210 98"
+              stroke="#1B2A4A"
+              stroke-width="3"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path d="M110 96 L118 72 L128 96 Z" fill="#F72585" />
+            <path d="M128 90 L136 68 L146 92 Z" fill="#F72585" />
+            <path d="M148 88 L156 70 L164 92 Z" fill="#F72585" />
+            <ellipse cx="112" cy="168" rx="16" ry="10" fill="#FF9F1C" />
+            <ellipse cx="168" cy="168" rx="16" ry="10" fill="#FF9F1C" />
+            <circle cx="64" cy="56" r="4" fill="#FFFF66" />
+            <circle cx="230" cy="48" r="3" fill="#FFF" />
+            <circle cx="248" cy="96" r="3.5" fill="#FFE566" />
+          </svg>
+          <figcaption>Your friendly dragon (image placeholder)</figcaption>
+        </figure>
+
+        <nav class="actions" aria-label="Home actions">
+          <button type="button" class="btn btn--start" id="start-game">
+            Start Game
+          </button>
+          <button
+            type="button"
+            class="btn btn--settings"
+            id="open-settings"
+            aria-expanded="false"
+            aria-controls="settings-panel"
+          >
+            Settings
+          </button>
+        </nav>
+
+        <section
+          id="settings-panel"
+          class="settings"
+          hidden
+          aria-label="Game settings"
+        >
+          <h2>Settings</h2>
+          <p>Sound and difficulty options will live here for little explorers.</p>
+          <button type="button" class="btn" id="close-settings">Done</button>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const settingsPanel = document.getElementById('settings-panel');
+      const openSettings = document.getElementById('open-settings');
+      const closeSettings = document.getElementById('close-settings');
+      const startGame = document.getElementById('start-game');
+
+      function setSettingsOpen(open) {
+        settingsPanel.hidden = !open;
+        openSettings.setAttribute('aria-expanded', String(open));
+      }
+
+      openSettings.addEventListener('click', () => {
+        setSettingsOpen(settingsPanel.hidden);
+      });
+
+      closeSettings.addEventListener('click', () => {
+        setSettingsOpen(false);
+      });
+
+      startGame.addEventListener('click', () => {
+        window.location.href = '/';
+      });
+    </script>
+  </body>
+</html>
