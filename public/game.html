@@ -17,21 +17,21 @@
       <header class="hud" aria-label="Game status">
         <div class="hud__level">
           <p class="hud__label" id="level-name">Lime Meadow</p>
-          <p class="hud__goal">Collect the shiny stars!</p>
+          <p class="hud__goal" id="level-goal">Collect the shiny stars!</p>
         </div>
 
         <div class="hud__meters" aria-live="polite">
           <div class="hud__stat" title="Stars collected">
             <span class="hud__icon hud__icon--star" aria-hidden="true">★</span>
             <span class="hud__stat-value">
-              <span id="star-count">0</span><span class="hud__stat-total">/3</span>
+              <span id="star-count">0</span><span id="star-total" class="hud__stat-total">/3</span>
             </span>
           </div>
 
           <div class="hud__stat" title="Coins collected">
             <span class="hud__icon hud__icon--coin" aria-hidden="true">◆</span>
             <span class="hud__stat-value">
-              <span id="coin-count">0</span><span class="hud__stat-total">/5</span>
+              <span id="coin-count">0</span><span id="coin-total" class="hud__stat-total">/5</span>
             </span>
           </div>
 
@@ -78,6 +78,6 @@
       </aside>
     </div>
 
-    <script src="js/game.js" defer></script>
+    <script type="module" src="/js/game.js"></script>
   </body>
 </html>

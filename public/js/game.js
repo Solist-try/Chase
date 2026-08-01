@@ -1,155 +1,80 @@
 /**
- * Simple game screen helpers for Dragon Adventure!
- * Draws a cheerful placeholder scene and wires Pause.
+ * Dragon Adventure! — static game page script
+ *
+ * What this file does (step by step):
+ *  1. Finds the <canvas> and HUD elements in game.html
+ *  2. Loads the real game engine from /src/engine (via Vite)
+ *  3. Starts Level 1 and keeps the HUD counters up to date
+ *  4. Pause button → shows the pause menu (Resume hides it)
+ *
+ * Tip for humans reading this:
+ *  The heavy lifting lives in src/static-game/adventureApp.ts.
+ *  That module imports GameEngine, Camera, Dragon, levels, etc.
  */
 
-var canvas = document.getElementById('game-canvas');
-var pauseButton = document.getElementById('pause-button');
-var resumeButton = document.getElementById('resume-button');
-var pauseMenu = document.getElementById('pause-menu');
-var starCount = document.getElementById('star-count');
-var coinCount = document.getElementById('coin-count');
-
-var isPaused = false;
-var stars = 0;
-var coins = 0;
-var animTime = 0;
-
-function setPaused(paused) {
-  isPaused = paused;
-  if (pauseMenu) {
-    pauseMenu.hidden = !paused;
-  }
-  if (pauseButton) {
-    pauseButton.setAttribute('aria-expanded', String(paused));
-  }
+/** Grab a page element by id (or null if missing). */
+function getElement(id) {
+  return document.getElementById(id);
 }
 
-function drawScene(ctx, width, height, time) {
-  // Sky
-  var sky = ctx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, '#7ec8e3');
-  sky.addColorStop(0.55, '#b8f2c8');
-  sky.addColorStop(1, '#ffe566');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, width, height);
+/**
+ * Collect every DOM node the adventure needs.
+ * Clear names make the HTML ↔ JS connection easy to follow.
+ */
+function findPageElements() {
+  const canvas = getElement('game-canvas');
 
-  // Soft hills
-  ctx.fillStyle = '#57cc99';
-  ctx.beginPath();
-  ctx.ellipse(width * 0.25, height * 0.95, width * 0.4, height * 0.28, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#80ed99';
-  ctx.beginPath();
-  ctx.ellipse(width * 0.75, height * 0.98, width * 0.45, height * 0.3, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Ground strip
-  ctx.fillStyle = '#2ec4b6';
-  ctx.fillRect(0, height - 48, width, 48);
-
-  // Bobbing dragon placeholder
-  var bob = Math.sin(time * 3) * 8;
-  var x = width * 0.35;
-  var y = height - 120 + bob;
-
-  ctx.fillStyle = 'rgba(27, 42, 74, 0.15)';
-  ctx.beginPath();
-  ctx.ellipse(x + 18, height - 52, 28, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#00bbf9';
-  ctx.beginPath();
-  ctx.ellipse(x - 10, y + 10, 22, 14, -0.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#2ec4b6';
-  ctx.beginPath();
-  ctx.ellipse(x + 18, y + 18, 34, 28, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#cbf3f0';
-  ctx.beginPath();
-  ctx.ellipse(x + 22, y + 24, 18, 14, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#2ec4b6';
-  ctx.beginPath();
-  ctx.ellipse(x + 48, y, 22, 18, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#1b2a4a';
-  ctx.beginPath();
-  ctx.arc(x + 44, y - 2, 3, 0, Math.PI * 2);
-  ctx.arc(x + 54, y - 2, 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Sparkles
-  ctx.fillStyle = '#ffff66';
-  for (var i = 0; i < 4; i++) {
-    var sx = width * 0.55 + Math.cos(time * 2 + i) * 40;
-    var sy = height * 0.35 + Math.sin(time * 2.4 + i) * 24;
-    ctx.beginPath();
-    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
-    ctx.fill();
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('Missing #game-canvas — cannot start the game.');
   }
+
+  return {
+    canvas,
+    levelName: getElement('level-name'),
+    levelGoal: getElement('level-goal'),
+    starCount: getElement('star-count'),
+    starTotal: getElement('star-total'),
+    coinCount: getElement('coin-count'),
+    coinTotal: getElement('coin-total'),
+    pauseButton: getElement('pause-button'),
+    resumeButton: getElement('resume-button'),
+    pauseMenu: getElement('pause-menu'),
+  };
 }
 
-function updateHud() {
-  if (starCount) {
-    starCount.textContent = String(stars);
-  }
-  if (coinCount) {
-    coinCount.textContent = String(coins);
-  }
+/**
+ * Load the game engine wiring from src/, then start playing.
+ * Vite serves and transforms the TypeScript under /src during `npm run dev`.
+ */
+async function loadGameEngineAndStart() {
+  // Initialize: read canvas + HUD from the page.
+  const pageElements = findPageElements();
+
+  // Load adventure bootstrap (uses src/engine GameEngine, display helpers, etc.).
+  const adventureModule = await import('/src/static-game/adventureApp.ts');
+
+  // Start Level 1 — this updates the HUD and wires the Pause button.
+  const stopAdventure = adventureModule.startStaticAdventure(pageElements);
+
+  // Optional cleanup if the page is ever torn down.
+  window.addEventListener('pagehide', stopAdventure, { once: true });
 }
 
-function loop(timestamp) {
-  if (!canvas) {
-    return;
-  }
+// Run after the HTML is ready.
+document.addEventListener('DOMContentLoaded', () => {
+  loadGameEngineAndStart().catch((error) => {
+    console.error('Could not start Dragon Adventure:', error);
 
-  var ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return;
-  }
-
-  if (!isPaused) {
-    animTime = timestamp / 1000;
-    // Gentle demo counters so the HUD feels alive
-    stars = Math.min(3, Math.floor(animTime / 4));
-    coins = Math.min(5, Math.floor(animTime / 3));
-    updateHud();
-  }
-
-  drawScene(ctx, canvas.width, canvas.height, animTime);
-  requestAnimationFrame(loop);
-}
-
-function setupButtons() {
-  if (pauseButton) {
-    pauseButton.addEventListener('click', function () {
-      setPaused(true);
-    });
-  }
-
-  if (resumeButton) {
-    resumeButton.addEventListener('click', function () {
-      setPaused(false);
-    });
-  }
-
-  document.addEventListener('keydown', function (event) {
-    if (event.code === 'Escape') {
-      setPaused(!isPaused);
+    const pauseMenu = getElement('pause-menu');
+    if (pauseMenu) {
+      pauseMenu.hidden = false;
+      const title = pauseMenu.querySelector('h2');
+      const message = pauseMenu.querySelector('p');
+      if (title) title.textContent = 'Oops!';
+      if (message) {
+        message.textContent =
+          'The game engine could not load. Try opening this page with npm run dev.';
+      }
     }
   });
-}
-
-function startGameScreen() {
-  setupButtons();
-  updateHud();
-  requestAnimationFrame(loop);
-}
-
-document.addEventListener('DOMContentLoaded', startGameScreen);
+});
