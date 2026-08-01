@@ -222,6 +222,14 @@
   line-height: 1.1;
 }
 
+.hud__dragon-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #c1121f;
+  line-height: 1.1;
+}
+
 .hud__goal {
   font-family: var(--font-body);
   font-weight: 700;

@@ -4,6 +4,12 @@ import { integrate } from '@engine/physics';
 import type { InputState, Rect } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
 import { Character, type CharacterOptions } from './Character';
+import {
+  DEFAULT_DRAGON_LOOK,
+  getColorPreset,
+  type DragonAccessoryId,
+  type DragonLook,
+} from './dragonLooks';
 
 export type DragonAnimation = 'idle' | 'walk' | 'jump' | 'happy' | 'bounce';
 
@@ -14,10 +20,26 @@ export interface DragonStats {
   maxHealth: number;
 }
 
+export interface DragonPalette {
+  body: string;
+  belly: string;
+  snout: string;
+  horn: string;
+  wing: string;
+  wingTip: string;
+  spine: string;
+  eyeWhite: string;
+  eyePupil: string;
+  cheek: string;
+  outline: string;
+  sparkle: string;
+  shadow: string;
+}
+
 /**
  * Rainbow-bright palette — saturated candy colors for age 8 readability.
  */
-export const DRAGON_PALETTE = {
+export const DRAGON_PALETTE: DragonPalette = {
   body: '#FF4D6D',
   belly: '#FFE566',
   snout: '#FF9F1C',
@@ -31,7 +53,26 @@ export const DRAGON_PALETTE = {
   outline: '#3A0CA3',
   sparkle: '#FFFF66',
   shadow: 'rgba(58, 12, 163, 0.22)',
-} as const;
+};
+
+function paletteFromLook(look: DragonLook): DragonPalette {
+  const preset = getColorPreset(look.colorId);
+  return {
+    body: preset.body,
+    belly: preset.belly,
+    snout: preset.crest,
+    horn: preset.accent,
+    wing: preset.wing,
+    wingTip: preset.crest,
+    spine: preset.accent,
+    eyeWhite: '#FFFAF0',
+    eyePupil: '#1B2A4A',
+    cheek: '#FF85A1',
+    outline: '#1B2A4A',
+    sparkle: '#FFFF66',
+    shadow: 'rgba(27, 42, 74, 0.22)',
+  };
+}
 
 /**
  * Child-friendly platformer hitbox:
@@ -65,6 +106,8 @@ export class Dragon extends Character {
   };
 
   animation: DragonAnimation = 'idle';
+  look: DragonLook;
+  private palette: DragonPalette;
   private happyTimer = 0;
   private bounceTimer = 0;
   private walkPhase = 0;
@@ -81,12 +124,18 @@ export class Dragon extends Character {
       name?: string;
       width?: number;
       height?: number;
+      look?: DragonLook;
     },
   ) {
+    const look = options.look ?? {
+      ...DEFAULT_DRAGON_LOOK,
+      name: options.name ?? DEFAULT_DRAGON_LOOK.name,
+    };
+    const palette = paletteFromLook(look);
     super({
       id: 'player-dragon',
-      name: options.name ?? 'Ember',
-      color: DRAGON_PALETTE.body,
+      name: look.name,
+      color: palette.body,
       width: options.width ?? DRAGON_HITBOX.width,
       height: options.height ?? DRAGON_HITBOX.height,
       x: options.x,
@@ -98,6 +147,8 @@ export class Dragon extends Character {
         ...options.move,
       },
     });
+    this.look = look;
+    this.palette = palette;
   }
 
   /** Full self-contained update (platformer movement + animations). */
@@ -224,8 +275,10 @@ export class Dragon extends Character {
     ctx.scale(this.facingX, 1);
     ctx.translate(-width / 2, -height);
 
+    const palette = this.palette;
+
     // Soft ground shadow
-    ctx.fillStyle = DRAGON_PALETTE.shadow;
+    ctx.fillStyle = palette.shadow;
     ctx.beginPath();
     ctx.ellipse(
       width / 2,
@@ -242,6 +295,7 @@ export class Dragon extends Character {
     this.drawBody(ctx, width, height, pose);
     this.drawWing(ctx, width, height, pose, 1);
     this.drawHead(ctx, width, height, pose);
+    this.drawAccessory(ctx, width, height, pose);
     this.drawLegs(ctx, width, height, pose);
 
     if (this.animation === 'happy') {
@@ -337,9 +391,10 @@ export class Dragon extends Character {
   ): void {
     const top = pose.bob + 8;
     const bodyH = (height - 16) * pose.stretch;
+    const palette = this.palette;
 
     // Spines
-    ctx.fillStyle = DRAGON_PALETTE.spine;
+    ctx.fillStyle = palette.spine;
     for (let i = 0; i < 3; i++) {
       const sx = width * 0.38 + i * 6;
       const sy = top + 6 + i * 5;
@@ -351,7 +406,7 @@ export class Dragon extends Character {
     }
 
     // Body
-    roundRect(ctx, 4, top, width - 8, bodyH, 16, DRAGON_PALETTE.body);
+    roundRect(ctx, 4, top, width - 8, bodyH, 16, palette.body);
     // Belly
     roundRect(
       ctx,
@@ -360,7 +415,7 @@ export class Dragon extends Character {
       width * 0.56,
       bodyH * 0.45,
       12,
-      DRAGON_PALETTE.belly,
+      palette.belly,
     );
   }
 
@@ -372,9 +427,10 @@ export class Dragon extends Character {
   ): void {
     const hx = width * 0.55;
     const hy = pose.bob + height * 0.12;
+    const palette = this.palette;
 
     // Horn
-    ctx.fillStyle = DRAGON_PALETTE.horn;
+    ctx.fillStyle = palette.horn;
     ctx.beginPath();
     ctx.moveTo(hx + 2, hy + 4);
     ctx.lineTo(hx + 8, hy - 12);
@@ -382,35 +438,169 @@ export class Dragon extends Character {
     ctx.fill();
 
     // Head
-    roundRect(ctx, hx - 4, hy, 26, 22, 10, DRAGON_PALETTE.body);
+    roundRect(ctx, hx - 4, hy, 26, 22, 10, palette.body);
     // Snout
-    roundRect(ctx, hx + 10, hy + 8, 16, 12, 6, DRAGON_PALETTE.snout);
+    roundRect(ctx, hx + 10, hy + 8, 16, 12, 6, palette.snout);
 
     // Eyes
-    ctx.fillStyle = DRAGON_PALETTE.eyeWhite;
+    ctx.fillStyle = palette.eyeWhite;
     ctx.beginPath();
     ctx.arc(hx + 6, hy + 8, 4.5, 0, Math.PI * 2);
     ctx.arc(hx + 16, hy + 8, 4.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = DRAGON_PALETTE.eyePupil;
+    ctx.fillStyle = palette.eyePupil;
     ctx.beginPath();
     ctx.arc(hx + 7, hy + 8, 2.2, 0, Math.PI * 2);
     ctx.arc(hx + 17, hy + 8, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
     // Cheeks
-    ctx.fillStyle = DRAGON_PALETTE.cheek;
+    ctx.fillStyle = palette.cheek;
     ctx.beginPath();
     ctx.arc(hx + 2, hy + 14, 3, 0, Math.PI * 2);
     ctx.arc(hx + 20, hy + 14, 3, 0, Math.PI * 2);
     ctx.fill();
 
     // Smile
-    ctx.strokeStyle = DRAGON_PALETTE.outline;
+    ctx.strokeStyle = palette.outline;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(hx + 14, hy + 14, 5 + pose.smile, 0.15 * Math.PI, 0.85 * Math.PI);
     ctx.stroke();
+  }
+
+  private drawAccessory(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    pose: { bob: number },
+  ): void {
+    const id = this.look.accessoryId;
+    if (id === 'none') return;
+
+    const hx = width * 0.55;
+    const hy = pose.bob + height * 0.12;
+    const palette = this.palette;
+
+    switch (id as DragonAccessoryId) {
+      case 'party_hat': {
+        ctx.fillStyle = '#FF4D6D';
+        ctx.beginPath();
+        ctx.moveTo(hx + 4, hy + 2);
+        ctx.lineTo(hx + 10, hy - 16);
+        ctx.lineTo(hx + 16, hy + 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FFE566';
+        ctx.beginPath();
+        ctx.arc(hx + 10, hy - 16, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'wizard_hat': {
+        ctx.fillStyle = '#5A189A';
+        ctx.beginPath();
+        ctx.moveTo(hx + 2, hy + 2);
+        ctx.lineTo(hx + 12, hy - 18);
+        ctx.lineTo(hx + 20, hy + 2);
+        ctx.closePath();
+        ctx.fill();
+        roundRect(ctx, hx, hy, 22, 5, 2, '#9B5DE5');
+        ctx.fillStyle = '#FEE440';
+        ctx.beginPath();
+        ctx.arc(hx + 12, hy - 8, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'crown': {
+        ctx.fillStyle = '#FFD166';
+        ctx.beginPath();
+        ctx.moveTo(hx + 2, hy + 2);
+        ctx.lineTo(hx + 2, hy - 8);
+        ctx.lineTo(hx + 7, hy - 2);
+        ctx.lineTo(hx + 11, hy - 10);
+        ctx.lineTo(hx + 15, hy - 2);
+        ctx.lineTo(hx + 20, hy - 8);
+        ctx.lineTo(hx + 20, hy + 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FF4D6D';
+        ctx.beginPath();
+        ctx.arc(hx + 11, hy - 4, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'bow': {
+        ctx.fillStyle = '#F15BB5';
+        ctx.beginPath();
+        ctx.moveTo(hx + 20, hy + 4);
+        ctx.lineTo(hx + 28, hy);
+        ctx.lineTo(hx + 28, hy + 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(hx + 20, hy + 4);
+        ctx.lineTo(hx + 12, hy);
+        ctx.lineTo(hx + 12, hy + 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FF85A1';
+        ctx.beginPath();
+        ctx.arc(hx + 20, hy + 5, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'scarf': {
+        ctx.fillStyle = palette.snout;
+        roundRect(ctx, hx - 2, hy + 18, 24, 6, 3, palette.snout);
+        ctx.beginPath();
+        ctx.moveTo(hx + 16, hy + 22);
+        ctx.lineTo(hx + 22, hy + 34);
+        ctx.lineTo(hx + 12, hy + 24);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case 'glasses': {
+        ctx.strokeStyle = palette.outline;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hx + 6, hy + 8, 4.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(hx + 17, hy + 8, 4.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(hx + 10.5, hy + 8);
+        ctx.lineTo(hx + 12.5, hy + 8);
+        ctx.stroke();
+        break;
+      }
+      case 'flower': {
+        const fx = hx + 4;
+        const fy = hy - 2;
+        ctx.fillStyle = '#FF99C8';
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.arc(
+            fx + Math.cos(angle) * 4,
+            fy + Math.sin(angle) * 4,
+            3,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+        ctx.fillStyle = '#FEE440';
+        ctx.beginPath();
+        ctx.arc(fx, fy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   private drawWing(
@@ -423,8 +613,9 @@ export class Dragon extends Character {
     const rootX = width / 2 + side * 6;
     const rootY = pose.bob + height * 0.38;
     const flap = pose.wing * side;
+    const palette = this.palette;
 
-    ctx.fillStyle = side < 0 ? DRAGON_PALETTE.wing : DRAGON_PALETTE.wingTip;
+    ctx.fillStyle = side < 0 ? palette.wing : palette.wingTip;
     ctx.beginPath();
     ctx.moveTo(rootX, rootY);
     ctx.quadraticCurveTo(
@@ -449,9 +640,9 @@ export class Dragon extends Character {
     pose: { bob: number; legL: number; legR: number },
   ): void {
     const footY = height - 8 + pose.bob * 0.2;
-    ctx.fillStyle = DRAGON_PALETTE.snout;
-    roundRect(ctx, 8, footY + pose.legL, 10, 10, 4, DRAGON_PALETTE.snout);
-    roundRect(ctx, width - 18, footY + pose.legR, 10, 10, 4, DRAGON_PALETTE.snout);
+    const palette = this.palette;
+    roundRect(ctx, 8, footY + pose.legL, 10, 10, 4, palette.snout);
+    roundRect(ctx, width - 18, footY + pose.legR, 10, 10, 4, palette.snout);
   }
 
   private drawSparkles(
@@ -461,7 +652,7 @@ export class Dragon extends Character {
     pose: { bob: number },
   ): void {
     const t = this.animTime * 10;
-    ctx.fillStyle = DRAGON_PALETTE.sparkle;
+    ctx.fillStyle = this.palette.sparkle;
     for (let i = 0; i < 5; i++) {
       const angle = t + i * 1.2;
       const px = width / 2 + Math.cos(angle) * (18 + i * 2);

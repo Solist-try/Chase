@@ -7,6 +7,7 @@ interface HUDProps {
   goal: string;
   stats: DragonStats;
   levelState: LevelRuntimeState;
+  dragonName?: string;
   nearbyHint?: string | null;
 }
 
@@ -17,6 +18,7 @@ export function HUD({
   levelName,
   goal,
   levelState,
+  dragonName,
   nearbyHint,
 }: HUDProps) {
   const hearts = FULL_HEARTS;
@@ -26,6 +28,9 @@ export function HUD({
       <div className="hud__top">
         <div className="hud__level">
           <span className="hud__label">{levelName}</span>
+          {dragonName ? (
+            <span className="hud__dragon-name">{dragonName}</span>
+          ) : null}
           <span className="hud__goal">{goal}</span>
         </div>
 

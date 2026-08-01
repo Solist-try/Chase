@@ -203,6 +203,10 @@
   background: var(--home-start) !important;
 }
 
+.home__btn--customize {
+  background: #ff99c8 !important;
+}
+
 .home__btn--settings {
   background: var(--home-settings) !important;
 }

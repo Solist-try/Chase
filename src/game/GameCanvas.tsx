@@ -11,6 +11,7 @@ import { Renderer } from '@engine/Renderer';
 import type { InputManager } from '@engine/Input';
 import { soundEngine } from '@engine/SoundEngine';
 import { Dragon } from '@characters/Dragon';
+import type { DragonLook } from '@characters/dragonLooks';
 import type { NPC } from '@characters/NPC';
 import { getNextLevelId, loadLevel } from '@levels/LevelLoader';
 import type { LevelRuntimeState } from '@levels/Level';
@@ -24,6 +25,7 @@ import { TouchControls } from '@ui/TouchControls';
 interface GameCanvasProps {
   levelId: string;
   settings: GameSettings;
+  dragonLook: DragonLook;
   onQuit: () => void;
   onLevelChange: (levelId: string) => void;
 }
@@ -69,6 +71,7 @@ const EMPTY_LEVEL_STATE: LevelRuntimeState = {
 export function GameCanvas({
   levelId,
   settings,
+  dragonLook,
   onQuit,
   onLevelChange,
 }: GameCanvasProps) {
@@ -136,6 +139,7 @@ export function GameCanvas({
     const dragon = new Dragon({
       x: level.config.spawn.x,
       y: level.config.spawn.y,
+      look: dragonLook,
     });
     const camera = new Camera(
       { width: VIEW_WIDTH, height: VIEW_HEIGHT },
@@ -239,7 +243,7 @@ export function GameCanvas({
       window.removeEventListener('keyup', onKeyUp);
       dialogueRef.current?.npc.setTalking(false);
     };
-  }, [levelId, onLevelChange, settings, restartToken]);
+  }, [levelId, onLevelChange, settings, dragonLook, restartToken]);
 
   const resume = () => {
     engineRef.current?.setPaused(false);
@@ -288,6 +292,7 @@ export function GameCanvas({
           goal={goal}
           stats={stats}
           levelState={levelState}
+          dragonName={dragonLook.name}
           nearbyHint={
             nearbyName && !dialogue
               ? `Near ${nearbyName} — press E to talk`

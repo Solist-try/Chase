@@ -13,6 +13,7 @@ interface HomePageProps {
   settings: GameSettings;
   onSettingsChange: (next: GameSettings) => void;
   onStart: () => void;
+  onCustomize?: () => void;
   onChooseLevel?: () => void;
 }
 
@@ -32,6 +33,7 @@ export function HomePage({
   settings,
   onSettingsChange,
   onStart,
+  onCustomize,
   onChooseLevel,
 }: HomePageProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -78,6 +80,16 @@ export function HomePage({
         <Button size="lg" className="home__btn home__btn--start" onClick={onStart}>
           Start Game
         </Button>
+        {onCustomize ? (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="home__btn home__btn--customize"
+            onClick={onCustomize}
+          >
+            Dress Up
+          </Button>
+        ) : null}
         <Button
           size="lg"
           variant="secondary"
