@@ -109,8 +109,8 @@ export class Level {
     }
 
     this.pickupCollectibles(dragon);
-    // Non-harmful: dragon just bounces back
-    this.collisions.resolveEnemyBounce(
+    // Non-harmful: dragon bounce animation + soft physics knockback
+    const bump = this.collisions.resolveEnemyBounce(
       dragon.body,
       this.enemies.map((enemy) => ({
         body: enemy.body,
@@ -118,6 +118,11 @@ export class Level {
       })),
       dt,
     );
+    if (bump.bounced) {
+      dragon.playBounce();
+      const hit = this.enemies.find((enemy) => enemy.body === bump.enemy?.body);
+      hit?.reactToBump();
+    }
     this.checkMarker(dragon);
     this.checkFriendProximity(dragon);
 

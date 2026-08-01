@@ -5,7 +5,7 @@ import type { InputState, Rect } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
 import { Character, type CharacterOptions } from './Character';
 
-export type DragonAnimation = 'idle' | 'walk' | 'jump' | 'happy';
+export type DragonAnimation = 'idle' | 'walk' | 'jump' | 'happy' | 'bounce';
 
 export interface DragonStats {
   stars: number;
@@ -66,6 +66,7 @@ export class Dragon extends Character {
 
   animation: DragonAnimation = 'idle';
   private happyTimer = 0;
+  private bounceTimer = 0;
   private walkPhase = 0;
   private facingX: 1 | -1 = 1;
   private readonly collisions = new CollisionEngine();
@@ -103,6 +104,7 @@ export class Dragon extends Character {
   override update(dt: number, input?: InputState, solids: Rect[] = []): void {
     this.animTime += dt;
     this.tickHappy(dt);
+    this.tickBounce(dt);
 
     if (input) {
       applyMovement(this.body, input, this.moveConfig);
@@ -123,6 +125,7 @@ export class Dragon extends Character {
   syncFromPhysics(dt: number, input?: InputState, landed = false): void {
     this.animTime += dt;
     this.tickHappy(dt);
+    this.tickBounce(dt);
     this.justLanded = landed;
 
     if (input?.left) this.facingX = -1;
@@ -161,12 +164,28 @@ export class Dragon extends Character {
     this.animation = 'happy';
   }
 
+  /** Soft “boing!” after bumping a cute enemy — no damage. */
+  playBounce(duration = 0.45): void {
+    this.bounceTimer = duration;
+    this.animation = 'bounce';
+  }
+
   private tickHappy(dt: number): void {
     if (this.happyTimer <= 0) return;
     this.happyTimer = Math.max(0, this.happyTimer - dt);
   }
 
+  private tickBounce(dt: number): void {
+    if (this.bounceTimer <= 0) return;
+    this.bounceTimer = Math.max(0, this.bounceTimer - dt);
+  }
+
   private resolveAnimation(_input?: InputState): void {
+    if (this.bounceTimer > 0) {
+      this.animation = 'bounce';
+      return;
+    }
+
     if (this.happyTimer > 0) {
       this.animation = 'happy';
       return;
@@ -224,6 +243,9 @@ export class Dragon extends Character {
     if (this.animation === 'happy') {
       this.drawSparkles(ctx, width, height, pose);
     }
+    if (this.animation === 'bounce') {
+      this.drawBounceRings(ctx, width, height, pose);
+    }
 
     ctx.restore();
   }
@@ -272,6 +294,19 @@ export class Dragon extends Character {
           legR: -2,
           smile: 2,
           shadow: bounce * 0.3,
+        };
+      }
+      case 'bounce': {
+        const t = this.bounceTimer;
+        const squash = Math.sin(t * 22);
+        return {
+          bob: -Math.abs(squash) * 8,
+          stretch: 1 + squash * 0.12,
+          wing: 26,
+          legL: 8,
+          legR: 8,
+          smile: 2,
+          shadow: 4,
         };
       }
       case 'idle':
@@ -434,6 +469,31 @@ export class Dragon extends Character {
       ctx.lineTo(px, py + r);
       ctx.lineTo(px - r * 0.6, py);
       ctx.fill();
+    }
+  }
+
+  private drawBounceRings(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    pose: { bob: number },
+  ): void {
+    const progress = 1 - this.bounceTimer / 0.45;
+    ctx.strokeStyle = `rgba(255, 209, 102, ${1 - progress})`;
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 2; i++) {
+      const radius = 12 + progress * 22 + i * 8;
+      ctx.beginPath();
+      ctx.ellipse(
+        width / 2,
+        height - 6 + pose.bob,
+        radius,
+        radius * 0.35,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
     }
   }
 }

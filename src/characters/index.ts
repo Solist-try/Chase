@@ -9,4 +9,4 @@ export {
   type DragonStats,
 } from './Dragon';
 export { NPC, type DialogueLine, type NPCOptions } from './NPC';
-export { Enemy, type EnemyOptions } from './Enemy';
+export { Enemy, type EnemyOptions, type EnemyPatrol } from './Enemy';
