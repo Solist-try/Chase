@@ -9,6 +9,7 @@ export type DragonAnimation = 'idle' | 'walk' | 'jump' | 'happy';
 
 export interface DragonStats {
   stars: number;
+  coins: number;
   health: number;
   maxHealth: number;
 }
@@ -58,6 +59,7 @@ const WALK_SPEED_THRESHOLD = 28;
 export class Dragon extends Character {
   stats: DragonStats = {
     stars: 0,
+    coins: 0,
     health: 3,
     maxHealth: 3,
   };
@@ -138,12 +140,23 @@ export class Dragon extends Character {
     this.playHappy();
   }
 
+  collectCoin(): void {
+    this.stats.coins += 1;
+    this.playHappy(0.4);
+  }
+
   heal(amount = 1): void {
     this.stats.health = Math.min(
       this.stats.maxHealth,
       this.stats.health + amount,
     );
     this.playHappy(0.45);
+  }
+
+  /** Gentle bump from a cute enemy — at most one heart, never scary. */
+  hurtSoft(): void {
+    if (this.stats.health <= 1) return;
+    this.stats.health -= 1;
   }
 
   playHappy(duration = HAPPY_DURATION): void {

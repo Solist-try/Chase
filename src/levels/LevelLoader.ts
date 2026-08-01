@@ -1,14 +1,16 @@
-import { level1 } from './level1';
-import { level2 } from './level2';
+import { Level1 } from './Level1';
+import { Level2 } from './Level2';
+import { Level3 } from './Level3';
 import { Level } from './Level';
 import type { LevelConfig } from './types';
 
 const LEVELS: Record<string, LevelConfig> = {
-  [level1.id]: level1,
-  [level2.id]: level2,
+  [Level1.id]: Level1,
+  [Level2.id]: Level2,
+  [Level3.id]: Level3,
 };
 
-export const LEVEL_ORDER = [level1.id, level2.id] as const;
+export const LEVEL_ORDER = [Level1.id, Level2.id, Level3.id] as const;
 
 export function listLevels(): LevelConfig[] {
   return LEVEL_ORDER.map((id) => LEVELS[id]);

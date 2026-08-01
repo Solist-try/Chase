@@ -61,10 +61,10 @@ src/
 
 ### Levels (`src/levels`)
 
-- `level1.ts` — Sunny Meadow  
-- `level2.ts` — Whispering Woods  
+- `themes.ts` — rainbow color themes  
+- `Level1.ts` / `Level2.ts` / `Level3.ts` — stage templates  
+- Platforms, cute enemies, stars/coins, friendly goals  
 - `LevelLoader.ts` — load / list / next-level helpers  
-- `assets/` — background placeholders referenced by configs
 
 ### UI (`src/ui`)
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { level1 } from '@levels/level1';
+import { Level1 } from '@levels/Level1';
 import { GameCanvas } from './game/GameCanvas';
 import { LevelSelect, MainMenu } from './ui';
 
@@ -7,13 +7,13 @@ type Screen = 'menu' | 'levels' | 'play';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('menu');
-  const [levelId, setLevelId] = useState(level1.id);
+  const [levelId, setLevelId] = useState(Level1.id);
 
   if (screen === 'menu') {
     return (
       <MainMenu
         onStart={() => {
-          setLevelId(level1.id);
+          setLevelId(Level1.id);
           setScreen('play');
         }}
         onSelectLevel={() => setScreen('levels')}

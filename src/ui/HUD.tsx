@@ -28,6 +28,9 @@ export function HUD({
           <span className="hud__pill" title="Stars">
             ★ {levelState.starsCollected}/{levelState.starsTotal}
           </span>
+          <span className="hud__pill" title="Coins">
+            ● {levelState.coinsCollected}/{levelState.coinsTotal}
+          </span>
           <span className="hud__pill hud__pill--hearts" title="Hearts">
             {'♥'.repeat(stats.health)}
             <span className="hud__hearts-empty">

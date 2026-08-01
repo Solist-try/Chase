@@ -7,6 +7,7 @@ import { Dragon } from '@characters/Dragon';
 import type { NPC } from '@characters/NPC';
 import { getNextLevelId, loadLevel } from '@levels/LevelLoader';
 import type { LevelRuntimeState } from '@levels/Level';
+import { getTheme } from '@levels/themes';
 import { DialogueBox } from '@ui/DialogueBox';
 import { HUD } from '@ui/HUD';
 import { PauseMenu } from '@ui/PauseMenu';
@@ -27,21 +28,33 @@ interface DialogueState {
   npc: NPC;
 }
 
+const EMPTY_LEVEL_STATE: LevelRuntimeState = {
+  starsCollected: 0,
+  starsTotal: 0,
+  coinsCollected: 0,
+  coinsTotal: 0,
+  goalComplete: false,
+  goalDescription: '',
+};
+
 export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<InputManager | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const dialogueRef = useRef<DialogueState | null>(null);
+  const levelRef = useRef<ReturnType<typeof loadLevel> | null>(null);
   const actionLatch = useRef(false);
   const nextLatch = useRef(false);
 
   const [paused, setPaused] = useState(false);
-  const [stats, setStats] = useState({ stars: 0, health: 3, maxHealth: 3 });
-  const [levelState, setLevelState] = useState<LevelRuntimeState>({
-    starsCollected: 0,
-    starsTotal: 0,
-    goalComplete: false,
+  const [stats, setStats] = useState({
+    stars: 0,
+    coins: 0,
+    health: 3,
+    maxHealth: 3,
   });
+  const [levelState, setLevelState] =
+    useState<LevelRuntimeState>(EMPTY_LEVEL_STATE);
   const [levelName, setLevelName] = useState('');
   const [goal, setGoal] = useState('');
   const [nearbyName, setNearbyName] = useState<string | null>(null);
@@ -52,6 +65,8 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
     if (!canvas) return;
 
     const level = loadLevel(levelId);
+    levelRef.current = level;
+    const theme = getTheme(level.config.theme);
     const dragon = new Dragon({
       x: level.config.spawn.x,
       y: level.config.spawn.y,
@@ -67,18 +82,17 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
     setDialogue(null);
     setPaused(false);
     setLevelName(level.config.name);
-    setGoal(level.config.goal);
+    setGoal(level.config.goal.description);
     setStats({ ...dragon.stats });
     setLevelState(level.getState());
 
     const engine = new GameEngine({
       canvas,
-      clearColor: level.config.background,
+      clearColor: theme.background,
       onPauseChange: (value) => setPaused(value),
       onUpdate: (dt, input, eng) => {
         if (dialogueRef.current) return;
 
-        // Kid-tuned platformer physics + dragon animation sync.
         eng.applyPlayerPhysics(dragon.body, input, level.solids, dt);
         dragon.syncFromPhysics(dt, input);
         nearby = level.update(dt, dragon);
@@ -87,6 +101,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
         if (input.action && nearby && !actionLatch.current) {
           actionLatch.current = true;
           nearby.setTalking(true);
+          level.noteTalkedTo(nearby.id);
           const nextDialogue = { lines: nearby.dialogue, index: 0, npc: nearby };
           dialogueRef.current = nextDialogue;
           setDialogue(nextDialogue);
@@ -101,7 +116,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
       },
       onRender: (ctx) => {
         renderer ??= new Renderer(canvas);
-        renderer.clear(level.config.background);
+        renderer.clear(theme.background);
         ctx.save();
         camera.apply(ctx);
         level.draw(renderer);
@@ -132,6 +147,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
       engine.stop();
       engineRef.current = null;
       inputRef.current = null;
+      levelRef.current = null;
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       dialogueRef.current?.npc.setTalking(false);

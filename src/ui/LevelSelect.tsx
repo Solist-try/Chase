@@ -28,7 +28,7 @@ export function LevelSelect({ onBack, onPick }: LevelSelectProps) {
               <span className="level-item__index">{index + 1}</span>
               <span className="level-item__copy">
                 <strong>{level.name}</strong>
-                <span>{level.goal}</span>
+                <span>{level.goal.description}</span>
               </span>
             </button>
           </li>

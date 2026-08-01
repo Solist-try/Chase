@@ -1,27 +1,37 @@
-import { rectsOverlap, bodyToRect } from '@engine/collisions';
-import type { Rect } from '@engine/types';
+import { bodyToRect, distance, rectsOverlap } from '@engine/collisions';
+import type { Rect, Vector2 } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
 import { Dragon } from '@characters/Dragon';
+import { Enemy } from '@characters/Enemy';
 import { NPC } from '@characters/NPC';
-import type { Collectible, LevelConfig } from './types';
+import { getTheme } from './themes';
+import type { Collectible, LevelConfig, LevelGoal } from './types';
 
 export interface LevelRuntimeState {
   starsCollected: number;
   starsTotal: number;
+  coinsCollected: number;
+  coinsTotal: number;
   goalComplete: boolean;
+  goalDescription: string;
 }
 
-/** Runtime level: solids, collectibles, NPCs, and drawing. */
+/** Runtime level: platforms, collectibles, cute enemies, NPCs, goals. */
 export class Level {
   readonly config: LevelConfig;
   readonly solids: Rect[];
   collectibles: Collectible[];
   npcs: NPC[];
+  enemies: Enemy[];
   private treePhase = 0;
+  private friendMet = false;
+  private friendTalked = false;
+  private markerReached = false;
+  private invincibleTimer = 0;
 
   constructor(config: LevelConfig) {
     this.config = config;
-    this.solids = config.solids.map((s) => ({ ...s.rect }));
+    this.solids = config.platforms.map((p) => ({ ...p.rect }));
     this.collectibles = config.collectibles.map((c) => ({
       ...c,
       position: { ...c.position },
@@ -42,6 +52,21 @@ export class Level {
           patrol: n.patrol,
         }),
     );
+    this.enemies = config.enemies.map(
+      (e) =>
+        new Enemy({
+          id: e.id,
+          kind: e.kind,
+          x: e.position.x,
+          y: e.position.y,
+          color: e.color,
+          patrol: e.patrol,
+        }),
+    );
+  }
+
+  get goal(): LevelGoal {
+    return this.config.goal;
   }
 
   getState(): LevelRuntimeState {
@@ -49,23 +74,93 @@ export class Level {
     const starsCollected = this.collectibles.filter(
       (c) => c.kind === 'star' && c.collected,
     ).length;
+    const coinsTotal = this.collectibles.filter((c) => c.kind === 'coin').length;
+    const coinsCollected = this.collectibles.filter(
+      (c) => c.kind === 'coin' && c.collected,
+    ).length;
+
     return {
       starsCollected,
       starsTotal,
-      goalComplete: starsCollected >= starsTotal && starsTotal > 0,
+      coinsCollected,
+      coinsTotal,
+      goalComplete: this.isGoalComplete(),
+      goalDescription: this.config.goal.description,
     };
+  }
+
+  /** Mark that the player opened dialogue with a friend NPC. */
+  noteTalkedTo(npcId: string): void {
+    if (this.config.goal.friendId === npcId) {
+      this.friendTalked = true;
+      this.friendMet = true;
+    }
   }
 
   update(dt: number, dragon: Dragon): NPC | null {
     this.treePhase += dt;
+    this.invincibleTimer = Math.max(0, this.invincibleTimer - dt);
+
     for (const npc of this.npcs) {
       npc.update(dt);
     }
+    for (const enemy of this.enemies) {
+      enemy.update(dt);
+    }
 
     this.pickupCollectibles(dragon);
+    this.resolveEnemyBumps(dragon);
+    this.checkMarker(dragon);
+    this.checkFriendProximity(dragon);
 
     const nearby = this.npcs.find((npc) => dragon.isNear(npc, 70)) ?? null;
     return nearby;
+  }
+
+  private isGoalComplete(): boolean {
+    const { goal } = this.config;
+    const stars = this.collectibles.filter(
+      (c) => c.kind === 'star' && c.collected,
+    ).length;
+    const coins = this.collectibles.filter(
+      (c) => c.kind === 'coin' && c.collected,
+    ).length;
+    const need = goal.collectCount ?? 0;
+
+    switch (goal.type) {
+      case 'collect_stars':
+        return stars >= need;
+      case 'collect_coins':
+        return coins >= need;
+      case 'find_friend':
+        return this.friendMet;
+      case 'talk_to_friend':
+        return this.friendTalked;
+      case 'reach_tree': {
+        const coinsOk = need <= 0 || coins >= need;
+        return coinsOk && this.markerReached;
+      }
+      default:
+        return false;
+    }
+  }
+
+  private checkFriendProximity(dragon: Dragon): void {
+    const friendId = this.config.goal.friendId;
+    if (!friendId) return;
+    const friend = this.npcs.find((n) => n.id === friendId);
+    if (friend && dragon.isNear(friend, 90)) {
+      this.friendMet = true;
+    }
+  }
+
+  private checkMarker(dragon: Dragon): void {
+    const marker = this.config.goal.marker;
+    if (!marker) return;
+    const radius = marker.radius ?? 70;
+    if (distance(dragon.center, marker.position) <= radius) {
+      this.markerReached = true;
+    }
   }
 
   private pickupCollectibles(dragon: Dragon): void {
@@ -80,54 +175,144 @@ export class Level {
       };
       if (!rectsOverlap(bounds, itemRect)) continue;
       item.collected = true;
-      if (item.kind === 'star') {
-        dragon.collectStar();
-      } else {
-        dragon.heal(1);
-      }
+      if (item.kind === 'star') dragon.collectStar();
+      else if (item.kind === 'heart') dragon.heal(1);
+      else dragon.collectCoin();
+    }
+  }
+
+  /** Soft, non-scary bump — short knockback, rare gentle heart loss. */
+  private resolveEnemyBumps(dragon: Dragon): void {
+    if (this.invincibleTimer > 0) return;
+    const bounds = dragon.bounds;
+    for (const enemy of this.enemies) {
+      if (!rectsOverlap(bounds, enemy.bounds)) continue;
+      const dir = dragon.center.x < enemy.center.x ? -1 : 1;
+      dragon.body.velocity.x = dir * 220;
+      dragon.body.velocity.y = -220;
+      dragon.body.grounded = false;
+      dragon.hurtSoft();
+      this.invincibleTimer = 1.2;
+      break;
     }
   }
 
   draw(renderer: Renderer): void {
-    const { width, height, background, groundColor, solids } = this.config;
-    renderer.fillRect({ x: 0, y: 0, width, height }, background);
+    const theme = getTheme(this.config.theme);
+    const { width, height, platforms } = this.config;
 
-    // Soft hills for atmosphere
-    renderer.ctx.fillStyle = groundColor;
+    renderer.fillRect({ x: 0, y: 0, width, height }, theme.background);
+
+    // Soft lower wash / hills
+    renderer.ctx.fillStyle = theme.backgroundBottom;
     renderer.ctx.beginPath();
-    renderer.ctx.ellipse(200, height - 40, 220, 90, 0, 0, Math.PI * 2);
-    renderer.ctx.ellipse(700, height - 20, 280, 110, 0, 0, Math.PI * 2);
-    renderer.ctx.ellipse(1100, height - 50, 240, 100, 0, 0, Math.PI * 2);
+    renderer.ctx.ellipse(200, height - 20, 240, 100, 0, 0, Math.PI * 2);
+    renderer.ctx.ellipse(700, height, 300, 120, 0, 0, Math.PI * 2);
+    renderer.ctx.ellipse(width - 200, height - 30, 260, 110, 0, 0, Math.PI * 2);
     renderer.ctx.fill();
 
-    // Decorative trees
-    this.drawTree(renderer, 180, 520, 0.9);
-    this.drawTree(renderer, 640, 480, 1.1);
-    this.drawTree(renderer, 1050, 540, 1);
+    // Decorative clouds
+    this.drawCloud(renderer, 180, 120, theme.cloud);
+    this.drawCloud(renderer, 620, 80, theme.cloud);
+    this.drawCloud(renderer, 1100, 140, theme.cloud);
 
-    for (let i = 0; i < solids.length; i++) {
-      const solid = solids[i];
-      const color = solid.color ?? '#5aae61';
-      renderer.drawRoundedRect(solid.rect, 8, color);
+    // Goal tree / marker
+    if (this.config.goal.marker) {
+      this.drawGoalMarker(renderer, this.config.goal.marker.position, theme.accent);
+    }
+
+    for (const platform of platforms) {
+      const color =
+        platform.color ??
+        (platform.kind === 'ground' || platform.kind === 'wall'
+          ? theme.ground
+          : platform.kind === 'cloud'
+            ? theme.cloud
+            : theme.platform);
+      const radius = platform.kind === 'cloud' ? 16 : 8;
+      renderer.drawRoundedRect(platform.rect, radius, color);
+      if (platform.kind === 'cloud') {
+        renderer.ctx.fillStyle = theme.cloud;
+        renderer.ctx.beginPath();
+        renderer.ctx.arc(
+          platform.rect.x + 20,
+          platform.rect.y + 6,
+          16,
+          0,
+          Math.PI * 2,
+        );
+        renderer.ctx.arc(
+          platform.rect.x + platform.rect.width - 20,
+          platform.rect.y + 6,
+          16,
+          0,
+          Math.PI * 2,
+        );
+        renderer.ctx.fill();
+      }
     }
 
     for (const item of this.collectibles) {
       if (item.collected) continue;
-      this.drawCollectible(renderer, item);
+      this.drawCollectible(renderer, item, theme.accent);
     }
 
+    for (const enemy of this.enemies) {
+      enemy.draw(renderer);
+    }
     for (const npc of this.npcs) {
       npc.draw(renderer);
     }
   }
 
-  private drawCollectible(renderer: Renderer, item: Collectible): void {
+  private drawGoalMarker(
+    renderer: Renderer,
+    position: Vector2,
+    accent: string,
+  ): void {
+    const sway = Math.sin(this.treePhase * 1.4) * 3;
+    // Trunk
+    renderer.fillRect(
+      { x: position.x - 10, y: position.y, width: 20, height: 70 },
+      '#8d6e4a',
+    );
+    // Rainbow canopy layers
+    const colors = ['#FF4D6D', '#FF9F1C', '#FFE566', '#80ED99', '#00BBF9', '#B5179E'];
+    colors.forEach((color, i) => {
+      renderer.drawCircle(
+        {
+          x: position.x + sway * (i % 2 === 0 ? 1 : -0.5),
+          y: position.y - 10 - i * 6,
+        },
+        34 - i * 3,
+        color,
+      );
+    });
+    // Sparkle tip
+    renderer.drawCircle(
+      { x: position.x, y: position.y - 48 },
+      6,
+      accent,
+    );
+  }
+
+  private drawCloud(renderer: Renderer, x: number, y: number, color: string): void {
+    renderer.drawCircle({ x, y }, 22, color);
+    renderer.drawCircle({ x: x + 24, y: y - 6 }, 28, color);
+    renderer.drawCircle({ x: x + 50, y: y }, 20, color);
+  }
+
+  private drawCollectible(
+    renderer: Renderer,
+    item: Collectible,
+    accent: string,
+  ): void {
     const bounce = Math.sin(this.treePhase * 5 + item.position.x * 0.01) * 4;
     const x = item.position.x;
     const y = item.position.y + bounce;
 
     if (item.kind === 'star') {
-      renderer.ctx.fillStyle = '#ffd166';
+      renderer.ctx.fillStyle = accent;
       renderer.ctx.beginPath();
       for (let i = 0; i < 5; i++) {
         const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
@@ -143,49 +328,32 @@ export class Level {
       }
       renderer.ctx.closePath();
       renderer.ctx.fill();
-    } else {
-      renderer.drawCircle({ x: x + 10, y: y + 12 }, 8, '#ff6b8a');
-      renderer.drawCircle({ x: x + 20, y: y + 12 }, 8, '#ff6b8a');
-      renderer.ctx.fillStyle = '#ff6b8a';
-      renderer.ctx.beginPath();
-      renderer.ctx.moveTo(x + 4, y + 14);
-      renderer.ctx.lineTo(x + 15, y + 26);
-      renderer.ctx.lineTo(x + 26, y + 14);
-      renderer.ctx.fill();
+      return;
     }
+
+    if (item.kind === 'coin') {
+      renderer.drawCircle({ x: x + 14, y: y + 14 }, 12, '#FFD166');
+      renderer.drawCircle({ x: x + 14, y: y + 14 }, 8, '#FFE566');
+      renderer.drawText('$', x + 14, y + 15, {
+        size: 12,
+        align: 'center',
+        color: '#E85D04',
+      });
+      return;
+    }
+
+    // heart
+    renderer.drawCircle({ x: x + 10, y: y + 12 }, 8, '#ff6b8a');
+    renderer.drawCircle({ x: x + 20, y: y + 12 }, 8, '#ff6b8a');
+    renderer.ctx.fillStyle = '#ff6b8a';
+    renderer.ctx.beginPath();
+    renderer.ctx.moveTo(x + 4, y + 14);
+    renderer.ctx.lineTo(x + 15, y + 26);
+    renderer.ctx.lineTo(x + 26, y + 14);
+    renderer.ctx.fill();
   }
 
-  private drawTree(
-    renderer: Renderer,
-    x: number,
-    y: number,
-    scale: number,
-  ): void {
-    const sway = Math.sin(this.treePhase * 1.5 + x) * 3;
-    const trunkW = 18 * scale;
-    const trunkH = 50 * scale;
-    renderer.fillRect(
-      { x: x - trunkW / 2, y: y, width: trunkW, height: trunkH },
-      '#8d6e4a',
-    );
-    renderer.drawCircle(
-      { x: x + sway, y: y - 10 * scale },
-      36 * scale,
-      '#3f8f4a',
-    );
-    renderer.drawCircle(
-      { x: x - 18 * scale + sway, y: y + 8 * scale },
-      28 * scale,
-      '#4aa356',
-    );
-    renderer.drawCircle(
-      { x: x + 18 * scale + sway, y: y + 8 * scale },
-      28 * scale,
-      '#4aa356',
-    );
-  }
-
-  /** Debug helper — unused in production drawing. */
+  /** Debug helper. */
   debugPlayerRect(renderer: Renderer, dragon: Dragon): void {
     renderer.strokeRect(bodyToRect(dragon.body), '#ffffff', 1);
   }
