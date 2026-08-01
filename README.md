@@ -69,7 +69,8 @@ src/
 
 ### UI (`src/ui`)
 
-- Main menu, level select, HUD, pause menu, dialogue box, buttons, touch controls
+- `HomePage.tsx` — rainbow title, dragon art, Start Game, Settings (sound / difficulty)  
+- Level select, HUD, pause menu, dialogue box, buttons, touch controls
 
 ## Design notes (age 8)
 

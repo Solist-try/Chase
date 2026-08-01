@@ -8,6 +8,7 @@ import type { NPC } from '@characters/NPC';
 import { getNextLevelId, loadLevel } from '@levels/LevelLoader';
 import type { LevelRuntimeState } from '@levels/Level';
 import { getTheme } from '@levels/themes';
+import type { GameSettings } from '@ui/HomePage';
 import { DialogueBox } from '@ui/DialogueBox';
 import { HUD } from '@ui/HUD';
 import { PauseMenu } from '@ui/PauseMenu';
@@ -18,8 +19,30 @@ const VIEW_HEIGHT = 540;
 
 interface GameCanvasProps {
   levelId: string;
+  settings: GameSettings;
   onQuit: () => void;
   onLevelChange: (levelId: string) => void;
+}
+
+function difficultyOverrides(settings: GameSettings) {
+  if (settings.difficulty === 'easy') {
+    return {
+      moveSpeed: 175,
+      jumpForce: 620,
+      gravity: 1200,
+      enemySpeed: 32,
+      coyoteTime: 0.18,
+      jumpBuffer: 0.18,
+    };
+  }
+  return {
+    moveSpeed: 190,
+    jumpForce: 580,
+    gravity: 1350,
+    enemySpeed: 45,
+    coyoteTime: 0.14,
+    jumpBuffer: 0.14,
+  };
 }
 
 interface DialogueState {
@@ -37,7 +60,12 @@ const EMPTY_LEVEL_STATE: LevelRuntimeState = {
   goalDescription: '',
 };
 
-export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) {
+export function GameCanvas({
+  levelId,
+  settings,
+  onQuit,
+  onLevelChange,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<InputManager | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -89,6 +117,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
     const engine = new GameEngine({
       canvas,
       clearColor: theme.background,
+      difficulty: difficultyOverrides(settings),
       onPauseChange: (value) => setPaused(value),
       onUpdate: (dt, input, eng) => {
         if (dialogueRef.current) return;
@@ -156,7 +185,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
       window.removeEventListener('keyup', onKeyUp);
       dialogueRef.current?.npc.setTalking(false);
     };
-  }, [levelId, onLevelChange]);
+  }, [levelId, onLevelChange, settings]);
 
   const resume = () => {
     engineRef.current?.setPaused(false);

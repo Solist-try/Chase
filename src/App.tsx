@@ -1,22 +1,44 @@
 import { useState } from 'react';
 import { Level1 } from '@levels/Level1';
 import { GameCanvas } from './game/GameCanvas';
-import { LevelSelect, MainMenu } from './ui';
+import {
+  HomePage,
+  LevelSelect,
+  type GameSettings,
+} from './ui';
+import { playSound, setSoundEnabled } from './ui/sound';
 
-type Screen = 'menu' | 'levels' | 'play';
+type Screen = 'home' | 'levels' | 'play';
+
+const DEFAULT_SETTINGS: GameSettings = {
+  soundEnabled: true,
+  difficulty: 'easy',
+};
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('menu');
+  const [screen, setScreen] = useState<Screen>('home');
   const [levelId, setLevelId] = useState(Level1.id);
+  const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
 
-  if (screen === 'menu') {
+  const updateSettings = (next: GameSettings) => {
+    setSoundEnabled(next.soundEnabled);
+    setSettings(next);
+  };
+
+  if (screen === 'home') {
     return (
-      <MainMenu
+      <HomePage
+        settings={settings}
+        onSettingsChange={updateSettings}
         onStart={() => {
+          playSound('uiClick');
           setLevelId(Level1.id);
           setScreen('play');
         }}
-        onSelectLevel={() => setScreen('levels')}
+        onChooseLevel={() => {
+          playSound('uiClick');
+          setScreen('levels');
+        }}
       />
     );
   }
@@ -24,7 +46,7 @@ export default function App() {
   if (screen === 'levels') {
     return (
       <LevelSelect
-        onBack={() => setScreen('menu')}
+        onBack={() => setScreen('home')}
         onPick={(id) => {
           setLevelId(id);
           setScreen('play');
@@ -36,7 +58,8 @@ export default function App() {
   return (
     <GameCanvas
       levelId={levelId}
-      onQuit={() => setScreen('menu')}
+      settings={settings}
+      onQuit={() => setScreen('home')}
       onLevelChange={(id) => setLevelId(id)}
     />
   );

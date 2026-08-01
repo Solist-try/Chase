@@ -8,34 +8,47 @@ import type { InputState, PhysicsBody, Rect } from './types';
  * Difficulty profile tuned for ~age 8:
  * floaty jumps, coyote time, jump buffer, slow enemies, safe dash.
  */
-export const KIDS_DIFFICULTY = {
+export interface KidsDifficulty {
   /** Horizontal run speed (px/s). Slightly slower than a typical Mario-like (~220). */
-  moveSpeed: 190,
+  moveSpeed: number;
   /** Acceleration toward move speed — smoother than hard snaps. */
-  moveAccel: 1600,
+  moveAccel: number;
   /** Upward jump impulse (px/s). Higher = easier gaps. */
-  jumpForce: 580,
+  jumpForce: number;
   /** World gravity (px/s²). Lower = longer hang time. */
-  gravity: 1350,
+  gravity: number;
   /** Cap on downward speed so falls feel gentle. */
-  maxFallSpeed: 680,
+  maxFallSpeed: number;
   /** Extra air steering while jumping (0–1). */
-  airControl: 0.9,
+  airControl: number;
   /** Jump still allowed shortly after walking off a ledge (seconds). */
-  coyoteTime: 0.14,
+  coyoteTime: number;
   /** Jump pressed slightly early still counts (seconds). */
-  jumpBuffer: 0.14,
+  jumpBuffer: number;
   /** Variable jump: release jump early to cut height. */
-  jumpCutMultiplier: 0.45,
+  jumpCutMultiplier: number;
   /** Ground friction when no left/right input. */
-  groundFriction: 0.78,
+  groundFriction: number;
   /** Default patrol / chase speed for enemies (px/s). */
-  enemySpeed: 45,
+  enemySpeed: number;
   /** Max dt clamp so spikes don't fling the player. */
-  maxDelta: 1 / 20,
-} as const;
+  maxDelta: number;
+}
 
-export type KidsDifficulty = typeof KIDS_DIFFICULTY;
+export const KIDS_DIFFICULTY: KidsDifficulty = {
+  moveSpeed: 190,
+  moveAccel: 1600,
+  jumpForce: 580,
+  gravity: 1350,
+  maxFallSpeed: 680,
+  airControl: 0.9,
+  coyoteTime: 0.14,
+  jumpBuffer: 0.14,
+  jumpCutMultiplier: 0.45,
+  groundFriction: 0.78,
+  enemySpeed: 45,
+  maxDelta: 1 / 20,
+};
 
 export interface GameEngineOptions {
   canvas: HTMLCanvasElement;

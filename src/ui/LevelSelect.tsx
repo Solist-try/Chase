@@ -12,7 +12,7 @@ export function LevelSelect({ onBack, onPick }: LevelSelectProps) {
 
   return (
     <div className="menu-screen menu-screen--levels">
-      <div className="menu-atmosphere menu-atmosphere--woods" aria-hidden="true" />
+      <div className="menu-atmosphere" aria-hidden="true" />
       <header className="menu-brand menu-brand--compact">
         <h1 className="menu-title menu-title--sm">Choose a Path</h1>
         <p className="menu-subtitle">Pick a place for Ember to explore.</p>
