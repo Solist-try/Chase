@@ -1,3 +1,4 @@
+import { VIEW_HEIGHT, VIEW_WIDTH } from './display';
 import type { Rect, Vector2 } from './types';
 
 /** Canvas drawing helpers used by characters and levels. */
@@ -5,20 +6,34 @@ export class Renderer {
   readonly ctx: CanvasRenderingContext2D;
   readonly width: number;
   readonly height: number;
+  private dpr = 1;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    logicalWidth = VIEW_WIDTH,
+    logicalHeight = VIEW_HEIGHT,
+  ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Canvas 2D context is not available');
     }
     this.ctx = ctx;
-    this.width = canvas.width;
-    this.height = canvas.height;
+    this.width = logicalWidth;
+    this.height = logicalHeight;
+    this.syncDpr(canvas);
+    this.ctx.imageSmoothingEnabled = false;
+  }
+
+  /** Keep drawing in logical pixels after the backing store changes. */
+  syncDpr(canvas: HTMLCanvasElement): void {
+    this.dpr =
+      canvas.width > 0 ? canvas.width / this.width : Math.min(window.devicePixelRatio || 1, 2);
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.ctx.imageSmoothingEnabled = false;
   }
 
   clear(color = '#7ec8e3'): void {
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.ctx.fillStyle = color;
     this.ctx.fillRect(0, 0, this.width, this.height);
   }

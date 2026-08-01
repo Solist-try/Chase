@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { preloadAssets } from '@assets/preload';
 import { soundEngine } from '@engine/SoundEngine';
 import { Level1 } from '@levels/Level1';
 import { GameCanvas } from './game/GameCanvas';
 import {
   HomePage,
   LevelSelect,
+  LoadingScreen,
   type GameSettings,
 } from './ui';
 
-type Screen = 'home' | 'levels' | 'play';
+type Screen = 'loading' | 'home' | 'levels' | 'play';
 
 const DEFAULT_SETTINGS: GameSettings = {
   soundEnabled: true,
@@ -16,9 +18,25 @@ const DEFAULT_SETTINGS: GameSettings = {
 };
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>('loading');
+  const [loadProgress, setLoadProgress] = useState(0);
   const [levelId, setLevelId] = useState(Level1.id);
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    let active = true;
+    void preloadAssets((progress) => {
+      if (!active) return;
+      setLoadProgress(progress.ratio);
+    }).then(() => {
+      if (!active) return;
+      setLoadProgress(1);
+      setScreen('home');
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const updateSettings = (next: GameSettings) => {
     soundEngine.setEnabled(next.soundEnabled);
@@ -27,6 +45,10 @@ export default function App() {
     }
     setSettings(next);
   };
+
+  if (screen === 'loading') {
+    return <LoadingScreen progress={loadProgress} />;
+  }
 
   if (screen === 'home') {
     return (

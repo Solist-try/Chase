@@ -1,9 +1,13 @@
 import { CollisionEngine, type PlatformCollisionResult } from './CollisionEngine';
 import { Controls, DASH_CONFIG } from './controls';
+import { VIEW_HEIGHT, VIEW_WIDTH } from './display';
 import { InputManager } from './Input';
 import { integrate } from './physics';
 import { soundEngine } from './SoundEngine';
 import type { InputState, PhysicsBody, Rect } from './types';
+
+/** Kid-friendly frame cap — smooth on phones without burning battery on 120Hz screens. */
+export const TARGET_FPS = 60;
 
 /**
  * Difficulty profile tuned for ~age 8:
@@ -63,6 +67,12 @@ export interface GameEngineOptions {
   onPauseChange?: (paused: boolean) => void;
   /** Clear color before onRender. */
   clearColor?: string;
+  /** Logical gameplay width (defaults to 960). */
+  logicalWidth?: number;
+  /** Logical gameplay height (defaults to 540). */
+  logicalHeight?: number;
+  /** Max frames per second (defaults to 60). */
+  targetFps?: number;
 }
 
 interface JumpMemory {
@@ -95,6 +105,7 @@ export class GameEngine {
   private running = false;
   private rafId = 0;
   private lastTime = 0;
+  private frameBudgetMs: number;
   private paused = false;
   private readonly jumpMemory = new WeakMap<PhysicsBody, JumpMemory>();
   private readonly dashMemory = new WeakMap<PhysicsBody, DashMemory>();
@@ -102,6 +113,9 @@ export class GameEngine {
   private readonly onRender?: GameEngineOptions['onRender'];
   private readonly onPauseChange?: GameEngineOptions['onPauseChange'];
   private readonly clearColor: string;
+  private readonly logicalWidth: number;
+  private readonly logicalHeight: number;
+  private dpr = 1;
   private currentInput: InputState = {
     up: false,
     down: false,
@@ -131,9 +145,24 @@ export class GameEngine {
     this.onRender = options.onRender;
     this.onPauseChange = options.onPauseChange;
     this.clearColor = options.clearColor ?? '#7ec8e3';
+    this.logicalWidth = options.logicalWidth ?? VIEW_WIDTH;
+    this.logicalHeight = options.logicalHeight ?? VIEW_HEIGHT;
+    this.frameBudgetMs =
+      1000 / Math.max(30, Math.min(60, options.targetFps ?? TARGET_FPS));
+    this.syncCanvasScale();
   }
 
-  /** Start the main requestAnimationFrame loop. */
+  /** Re-apply DPR transform after the canvas backing store is resized. */
+  syncCanvasScale(): void {
+    this.dpr =
+      this.canvas.width > 0
+        ? this.canvas.width / this.logicalWidth
+        : Math.min(window.devicePixelRatio || 1, 2);
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.ctx.imageSmoothingEnabled = false;
+  }
+
+  /** Start the main requestAnimationFrame loop (FPS-limited). */
   start(): void {
     if (this.running) return;
     this.running = true;
@@ -168,10 +197,17 @@ export class GameEngine {
 
   private tick = (now: number): void => {
     if (!this.running) return;
+    this.rafId = requestAnimationFrame(this.tick);
 
-    const rawDt = (now - this.lastTime) / 1000;
-    this.lastTime = now;
-    const dt = Math.min(rawDt, this.difficulty.maxDelta);
+    const elapsedMs = now - this.lastTime;
+    // FPS limiter: skip work until the kid-friendly frame budget elapses
+    if (elapsedMs < this.frameBudgetMs - 0.5) {
+      return;
+    }
+
+    // Carry remainder so we don't drift on 120Hz displays
+    this.lastTime = now - (elapsedMs % this.frameBudgetMs);
+    const dt = Math.min(elapsedMs / 1000, this.difficulty.maxDelta);
     this.frameDt = dt;
 
     this.handleInput();
@@ -179,8 +215,6 @@ export class GameEngine {
       this.update(dt);
     }
     this.render();
-
-    this.rafId = requestAnimationFrame(this.tick);
   };
 
   /** Read Arrow/WASD, Space jump, Shift dash — smooth buffered polling. */
@@ -199,10 +233,10 @@ export class GameEngine {
 
   /** Draw the frame. Clears the canvas, then calls onRender. */
   render(): void {
-    const { ctx, canvas, clearColor } = this;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const { ctx, clearColor, logicalWidth, logicalHeight, dpr } = this;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = clearColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, logicalWidth, logicalHeight);
     this.onRender?.(ctx, this);
   }
 

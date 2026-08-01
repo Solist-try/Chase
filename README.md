@@ -50,6 +50,7 @@ src/
 - `controls.ts` — Arrow/WASD, Space jump, Shift dash (buffered & forgiving)  
 - `CollisionEngine.ts` — platforms, jump landing, non-harmful enemy bounce  
 - `SoundEngine.ts` — jump/collect SFX, looping cheerful music, mute toggle  
+- `display.ts` — canvas DPR scaling + responsive stage fitting  
 - `physics.ts` — gravity / integration helpers  
 - `movement.ts` — top-down + platformer movement  
 - `collisions.ts` — AABB overlap + resolution  
@@ -72,6 +73,13 @@ src/
 
 - `HomePage.tsx` — rainbow title, dragon art, Start Game, Settings (sound / difficulty)  
 - Level select, HUD, pause menu, dialogue box, buttons, touch controls
+
+## Browser optimizations
+
+- Canvas DPR scaling with a fixed 960×540 logical view  
+- Responsive letterboxed stage (phones / tablets / desktop)  
+- Asset preloading before the home screen  
+- 60 FPS limiter for smooth, battery-friendly play  
 
 ## Design notes (age 8)
 

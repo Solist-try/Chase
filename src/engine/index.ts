@@ -20,8 +20,16 @@ export { Camera } from './Camera';
 export { GameLoop } from './GameLoop';
 export { Renderer } from './Renderer';
 export {
+  applyCanvasScale,
+  fitStageSize,
+  VIEW_WIDTH,
+  VIEW_HEIGHT,
+  type CanvasScale,
+} from './display';
+export {
   GameEngine,
   KIDS_DIFFICULTY,
+  TARGET_FPS,
   type KidsDifficulty,
   type GameEngineOptions,
 } from './GameEngine';

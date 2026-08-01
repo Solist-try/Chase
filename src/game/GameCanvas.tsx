@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera } from '@engine/Camera';
+import {
+  applyCanvasScale,
+  fitStageSize,
+  VIEW_HEIGHT,
+  VIEW_WIDTH,
+} from '@engine/display';
 import { GameEngine } from '@engine/GameEngine';
 import { Renderer } from '@engine/Renderer';
 import type { InputManager } from '@engine/Input';
@@ -14,9 +20,6 @@ import { DialogueBox } from '@ui/DialogueBox';
 import { HUD } from '@ui/HUD';
 import { PauseMenu } from '@ui/PauseMenu';
 import { TouchControls } from '@ui/TouchControls';
-
-const VIEW_WIDTH = 960;
-const VIEW_HEIGHT = 540;
 
 interface GameCanvasProps {
   levelId: string;
@@ -69,6 +72,8 @@ export function GameCanvas({
   onQuit,
   onLevelChange,
 }: GameCanvasProps) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<InputManager | null>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -91,10 +96,39 @@ export function GameCanvas({
   const [nearbyName, setNearbyName] = useState<string | null>(null);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [restartToken, setRestartToken] = useState(0);
+  const [stageSize, setStageSize] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT });
+
+  // Responsive letterboxed stage
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const layout = () => {
+      const size = fitStageSize(stage.clientWidth, stage.clientHeight);
+      setStageSize(size);
+      const canvas = canvasRef.current;
+      const engine = engineRef.current;
+      if (canvas) {
+        applyCanvasScale(canvas, VIEW_WIDTH, VIEW_HEIGHT);
+        engine?.syncCanvasScale();
+      }
+    };
+
+    layout();
+    const observer = new ResizeObserver(layout);
+    observer.observe(stage);
+    window.addEventListener('orientationchange', layout);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('orientationchange', layout);
+    };
+  }, [levelId, restartToken]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    applyCanvasScale(canvas, VIEW_WIDTH, VIEW_HEIGHT);
 
     const level = loadLevel(levelId);
     levelRef.current = level;
@@ -125,6 +159,9 @@ export function GameCanvas({
     const engine = new GameEngine({
       canvas,
       clearColor: theme.background,
+      logicalWidth: VIEW_WIDTH,
+      logicalHeight: VIEW_HEIGHT,
+      targetFps: 60,
       difficulty: difficultyOverrides(settings),
       onPauseChange: (value) => {
         setPaused(value);
@@ -163,7 +200,8 @@ export function GameCanvas({
         setNearbyName(nearby?.name ?? null);
       },
       onRender: (ctx) => {
-        renderer ??= new Renderer(canvas);
+        renderer ??= new Renderer(canvas, VIEW_WIDTH, VIEW_HEIGHT);
+        renderer.syncDpr(canvas);
         renderer.clear(theme.background);
         ctx.save();
         camera.apply(ctx);
@@ -232,43 +270,49 @@ export function GameCanvas({
   };
 
   return (
-    <div className="game-shell">
-      <canvas
-        ref={canvasRef}
-        className="game-canvas"
-        width={VIEW_WIDTH}
-        height={VIEW_HEIGHT}
-        aria-label={`${levelName} game view`}
-      />
-      <HUD
-        levelName={levelName}
-        goal={goal}
-        stats={stats}
-        levelState={levelState}
-        nearbyHint={
-          nearbyName && !dialogue
-            ? `Near ${nearbyName} — press E to talk`
-            : null
-        }
-      />
-      {dialogue ? (
-        <DialogueBox
-          lines={dialogue.lines}
-          index={dialogue.index}
-          onNext={advanceDialogue}
-          onClose={closeDialogue}
+    <div className="game-stage" ref={stageRef}>
+      <div
+        className="game-shell"
+        ref={shellRef}
+        style={{ width: stageSize.width, height: stageSize.height }}
+      >
+        <canvas
+          ref={canvasRef}
+          className="game-canvas"
+          width={VIEW_WIDTH}
+          height={VIEW_HEIGHT}
+          aria-label={`${levelName} game view`}
         />
-      ) : null}
-      {paused ? (
-        <PauseMenu
-          onResume={resume}
-          onRestart={restartLevel}
-          onBackHome={onQuit}
+        <HUD
+          levelName={levelName}
+          goal={goal}
+          stats={stats}
+          levelState={levelState}
+          nearbyHint={
+            nearbyName && !dialogue
+              ? `Near ${nearbyName} — press E to talk`
+              : null
+          }
         />
-      ) : null}
-      <TouchControls
-        onChange={(partial) => inputRef.current?.setVirtual(partial)}
-      />
+        {dialogue ? (
+          <DialogueBox
+            lines={dialogue.lines}
+            index={dialogue.index}
+            onNext={advanceDialogue}
+            onClose={closeDialogue}
+          />
+        ) : null}
+        {paused ? (
+          <PauseMenu
+            onResume={resume}
+            onRestart={restartLevel}
+            onBackHome={onQuit}
+          />
+        ) : null}
+        <TouchControls
+          onChange={(partial) => inputRef.current?.setVirtual(partial)}
+        />
+      </div>
     </div>
   );
 }
