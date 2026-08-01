@@ -3,6 +3,13 @@ export * from './physics';
 export * from './movement';
 export * from './collisions';
 export {
+  CollisionEngine,
+  ENEMY_BOUNCE,
+  type PlatformCollisionResult,
+  type EnemyBody,
+  type EnemyBounceResult,
+} from './CollisionEngine';
+export {
   Controls,
   CONTROL_BINDINGS,
   DASH_CONFIG,

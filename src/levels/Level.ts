@@ -1,3 +1,4 @@
+import { CollisionEngine } from '@engine/CollisionEngine';
 import { bodyToRect, distance, rectsOverlap } from '@engine/collisions';
 import type { Rect, Vector2 } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
@@ -27,7 +28,7 @@ export class Level {
   private friendMet = false;
   private friendTalked = false;
   private markerReached = false;
-  private invincibleTimer = 0;
+  private readonly collisions = new CollisionEngine();
 
   constructor(config: LevelConfig) {
     this.config = config;
@@ -99,7 +100,6 @@ export class Level {
 
   update(dt: number, dragon: Dragon): NPC | null {
     this.treePhase += dt;
-    this.invincibleTimer = Math.max(0, this.invincibleTimer - dt);
 
     for (const npc of this.npcs) {
       npc.update(dt);
@@ -109,7 +109,15 @@ export class Level {
     }
 
     this.pickupCollectibles(dragon);
-    this.resolveEnemyBumps(dragon);
+    // Non-harmful: dragon just bounces back
+    this.collisions.resolveEnemyBounce(
+      dragon.body,
+      this.enemies.map((enemy) => ({
+        body: enemy.body,
+        center: enemy.center,
+      })),
+      dt,
+    );
     this.checkMarker(dragon);
     this.checkFriendProximity(dragon);
 
@@ -178,22 +186,6 @@ export class Level {
       if (item.kind === 'star') dragon.collectStar();
       else if (item.kind === 'heart') dragon.heal(1);
       else dragon.collectCoin();
-    }
-  }
-
-  /** Soft, non-scary bump — short knockback, rare gentle heart loss. */
-  private resolveEnemyBumps(dragon: Dragon): void {
-    if (this.invincibleTimer > 0) return;
-    const bounds = dragon.bounds;
-    for (const enemy of this.enemies) {
-      if (!rectsOverlap(bounds, enemy.bounds)) continue;
-      const dir = dragon.center.x < enemy.center.x ? -1 : 1;
-      dragon.body.velocity.x = dir * 220;
-      dragon.body.velocity.y = -220;
-      dragon.body.grounded = false;
-      dragon.hurtSoft();
-      this.invincibleTimer = 1.2;
-      break;
     }
   }
 

@@ -1,4 +1,4 @@
-import { collideWithWorld } from './collisions';
+import { CollisionEngine, type PlatformCollisionResult } from './CollisionEngine';
 import { Controls, DASH_CONFIG } from './controls';
 import { InputManager } from './Input';
 import { integrate } from './physics';
@@ -72,7 +72,11 @@ export class GameEngine {
   /** @deprecated Prefer {@link controls} for platformer input. */
   readonly input: InputManager;
   readonly controls: Controls;
+  readonly collisions: CollisionEngine;
   readonly difficulty: KidsDifficulty;
+
+  /** Landing event from the latest {@link applyPlayerPhysics} call. */
+  lastPlatformCollision: PlatformCollisionResult | null = null;
 
   private running = false;
   private rafId = 0;
@@ -107,6 +111,7 @@ export class GameEngine {
     this.ctx.imageSmoothingEnabled = false;
     this.input = new InputManager();
     this.controls = this.input.getControls();
+    this.collisions = new CollisionEngine();
     this.difficulty = { ...KIDS_DIFFICULTY, ...options.difficulty };
     this.onUpdate = options.onUpdate;
     this.onRender = options.onRender;
@@ -215,7 +220,7 @@ export class GameEngine {
     this.applyJumpArc(body, input, dt);
     this.applyGravity(body, dt);
     integrate(body, dt);
-    collideWithWorld(body, solids);
+    this.lastPlatformCollision = this.collisions.resolvePlatforms(body, solids);
     this.refreshCoyote(body);
 
     if (body.grounded) {

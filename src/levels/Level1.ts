@@ -71,7 +71,7 @@ export const Level1: LevelConfig = {
         },
         {
           speaker: 'Pip',
-          text: 'Those green blobs are just shy — a soft bump is all!',
+          text: 'Those green blobs are just shy — you bounce back, no ouch!',
         },
       ],
       patrol: { minX: 380, maxX: 520, speed: 40 },

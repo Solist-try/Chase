@@ -1,4 +1,4 @@
-import { collideWithWorld } from '@engine/collisions';
+import { CollisionEngine } from '@engine/CollisionEngine';
 import { applyMovement } from '@engine/movement';
 import { integrate } from '@engine/physics';
 import type { InputState, Rect } from '@engine/types';
@@ -68,6 +68,9 @@ export class Dragon extends Character {
   private happyTimer = 0;
   private walkPhase = 0;
   private facingX: 1 | -1 = 1;
+  private readonly collisions = new CollisionEngine();
+  /** True on the frame a jump lands on a platform. */
+  justLanded = false;
 
   constructor(
     options: Omit<
@@ -117,9 +120,10 @@ export class Dragon extends Character {
    * Call after external physics (e.g. GameEngine.applyPlayerPhysics)
    * to advance timers and pick the current animation.
    */
-  syncFromPhysics(dt: number, input?: InputState): void {
+  syncFromPhysics(dt: number, input?: InputState, landed = false): void {
     this.animTime += dt;
     this.tickHappy(dt);
+    this.justLanded = landed;
 
     if (input?.left) this.facingX = -1;
     if (input?.right) this.facingX = 1;
@@ -132,7 +136,8 @@ export class Dragon extends Character {
   }
 
   protected override afterIntegrate(solids: Rect[]): void {
-    collideWithWorld(this.body, solids);
+    const result = this.collisions.resolvePlatforms(this.body, solids);
+    this.justLanded = result.landed;
   }
 
   collectStar(): void {
@@ -151,12 +156,6 @@ export class Dragon extends Character {
       this.stats.health + amount,
     );
     this.playHappy(0.45);
-  }
-
-  /** Gentle bump from a cute enemy — at most one heart, never scary. */
-  hurtSoft(): void {
-    if (this.stats.health <= 1) return;
-    this.stats.health -= 1;
   }
 
   playHappy(duration = HAPPY_DURATION): void {

@@ -94,7 +94,11 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
         if (dialogueRef.current) return;
 
         eng.applyPlayerPhysics(dragon.body, input, level.solids, dt);
-        dragon.syncFromPhysics(dt, input);
+        dragon.syncFromPhysics(
+          dt,
+          input,
+          eng.lastPlatformCollision?.landed ?? false,
+        );
         nearby = level.update(dt, dragon);
         camera.follow(dragon.center);
 

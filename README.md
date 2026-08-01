@@ -48,6 +48,7 @@ src/
 
 - `GameEngine.ts` — rAF loop, `handleInput` / `update` / `render`, kid-tuned physics  
 - `controls.ts` — Arrow/WASD, Space jump, Shift dash (buffered & forgiving)  
+- `CollisionEngine.ts` — platforms, jump landing, non-harmful enemy bounce  
 - `physics.ts` — gravity / integration helpers  
 - `movement.ts` — top-down + platformer movement  
 - `collisions.ts` — AABB overlap + resolution  
