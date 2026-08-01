@@ -1,16 +1,20 @@
 /**
- * Story intro page — Next starts Level 1 (game.html).
+ * Story page script
+ * Next → load game.html (Level 1)
  */
 
-function setupStoryPage() {
-  var nextButton = document.getElementById('next-button');
-
-  if (nextButton) {
-    nextButton.addEventListener('click', function () {
-      // Level 1 lives on the static game page.
-      window.location.href = 'game.html';
-    });
-  }
+function goToGame() {
+  window.location.href = 'game.html';
 }
 
-document.addEventListener('DOMContentLoaded', setupStoryPage);
+function setupNextButton() {
+  var nextButton = document.getElementById('next-button');
+
+  if (!nextButton) {
+    return;
+  }
+
+  nextButton.addEventListener('click', goToGame);
+}
+
+document.addEventListener('DOMContentLoaded', setupNextButton);
