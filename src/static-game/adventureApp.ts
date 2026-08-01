@@ -70,12 +70,14 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
     logicalHeight: VIEW_HEIGHT,
     targetFps: 60,
     onPauseChange: (paused) => {
-      showPauseMenu(hud, paused);
+      // Esc / P → open the standalone pause page (same as the Pause button).
       if (paused) {
         soundEngine.stopMusic();
-      } else {
-        soundEngine.playMusic('cheerful');
+        window.location.href = 'pause.html';
+        return;
       }
+      showPauseMenu(hud, false);
+      soundEngine.playMusic('cheerful');
     },
     onUpdate: (dt, input, engine) => {
       engine.applyPlayerPhysics(dragon.body, input, level.solids, dt);
@@ -102,19 +104,15 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
     },
   });
 
-  // Pause button → show the pause menu (and freeze the engine).
+  // Optional overlay controls (used only if those elements exist).
   hud.pauseButton?.addEventListener('click', () => {
-    gameEngine.setPaused(true);
+    window.location.href = 'pause.html';
   });
-
-  // Resume button → hide the pause menu and continue playing.
   hud.resumeButton?.addEventListener('click', () => {
     gameEngine.setPaused(false);
   });
-
-  // Restart Level → reload the game page from the start.
   hud.restartButton?.addEventListener('click', () => {
-    window.location.href = 'game.html?restart=1';
+    window.location.href = 'game.html';
   });
 
   // Re-scale when the window size changes.

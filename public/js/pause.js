@@ -1,40 +1,17 @@
 /**
- * Pause menu button handlers for Dragon Adventure!
- *
- * Resume  → return to game.html
- * Restart → reload game.html (fresh level)
- * Home    → load home.html
+ * Pause menu buttons for Dragon Adventure!
+ * Resume / Restart → game.html
+ * Home → home.html
  */
 
-function goToPage(path) {
-  window.location.href = path;
-}
+document.getElementById('resumeBtn').onclick = () => {
+  window.location.href = 'game.html';
+};
 
-function setupPauseButtons() {
-  var resumeButton = document.getElementById('resume-button');
-  var restartButton = document.getElementById('restart-button');
-  var homeButton = document.getElementById('home-button');
+document.getElementById('restartBtn').onclick = () => {
+  window.location.href = 'game.html';
+};
 
-  if (resumeButton) {
-    resumeButton.addEventListener('click', function () {
-      // Return to the game screen.
-      goToPage('game.html');
-    });
-  }
-
-  if (restartButton) {
-    restartButton.addEventListener('click', function () {
-      // Reload the level from the start.
-      goToPage('game.html?restart=1');
-    });
-  }
-
-  if (homeButton) {
-    homeButton.addEventListener('click', function () {
-      // Go back to the home screen.
-      goToPage('home.html');
-    });
-  }
-}
-
-document.addEventListener('DOMContentLoaded', setupPauseButtons);
+document.getElementById('homeBtn').onclick = () => {
+  window.location.href = 'home.html';
+};

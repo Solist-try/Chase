@@ -4,6 +4,10 @@
  */
 import { startStaticAdventure } from './adventureApp';
 
+document.getElementById('pauseBtn')!.onclick = () => {
+  window.location.href = 'pause.html';
+};
+
 function getElement(id: string): HTMLElement | null {
   return document.getElementById(id);
 }
@@ -22,10 +26,10 @@ function findPageElements() {
     starTotal: getElement('star-total'),
     coinCount: getElement('coin-count'),
     coinTotal: getElement('coin-total'),
-    pauseButton: getElement('pause-button') as HTMLButtonElement | null,
-    resumeButton: getElement('resume-button') as HTMLButtonElement | null,
-    restartButton: getElement('restart-button') as HTMLButtonElement | null,
-    pauseMenu: getElement('pause-menu'),
+    pauseButton: null,
+    resumeButton: null,
+    restartButton: null,
+    pauseMenu: null,
   };
 }
 

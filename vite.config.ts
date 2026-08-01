@@ -48,6 +48,8 @@ function bundleStaticGamePage(): Plugin {
 }
 
 export default defineConfig({
+  // Serve files from public/ at the site root (/home.html, /game.html, …).
+  publicDir: 'public',
   plugins: [react(), bundleStaticGamePage()],
   resolve: {
     alias: aliases,
