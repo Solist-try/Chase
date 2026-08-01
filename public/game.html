@@ -4,24 +4,80 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dragon Adventure! — Game</title>
-    <meta http-equiv="refresh" content="0; url=/" />
-    <link rel="stylesheet" href="/css/home.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/game.css" />
   </head>
   <body>
-    <div class="page">
-      <main>
-        <header class="hero">
-          <h1 class="title" aria-label="Loading game">
-            <span>L</span><span>e</span><span>t</span><span>'</span><span>s</span>
-            <span class="space" aria-hidden="true"> </span>
-            <span>p</span><span>l</span><span>a</span><span>y</span><span>!</span>
-          </h1>
-          <p class="tagline">Opening the adventure…</p>
-        </header>
-        <p>
-          <a class="btn btn--start" href="/">Go to the game</a>
-        </p>
+    <div class="game-page">
+      <header class="hud" aria-label="Game status">
+        <div class="hud__level">
+          <p class="hud__label" id="level-name">Lime Meadow</p>
+          <p class="hud__goal">Collect the shiny stars!</p>
+        </div>
+
+        <div class="hud__meters" aria-live="polite">
+          <div class="hud__stat" title="Stars collected">
+            <span class="hud__icon hud__icon--star" aria-hidden="true">★</span>
+            <span class="hud__stat-value">
+              <span id="star-count">0</span><span class="hud__stat-total">/3</span>
+            </span>
+          </div>
+
+          <div class="hud__stat" title="Coins collected">
+            <span class="hud__icon hud__icon--coin" aria-hidden="true">◆</span>
+            <span class="hud__stat-value">
+              <span id="coin-count">0</span><span class="hud__stat-total">/5</span>
+            </span>
+          </div>
+
+          <div
+            class="hud__stat hud__stat--hearts"
+            title="Dragon health — always full and happy!"
+            aria-label="3 full hearts"
+          >
+            <span class="hud__heart" aria-hidden="true">♥</span>
+            <span class="hud__heart" aria-hidden="true">♥</span>
+            <span class="hud__heart" aria-hidden="true">♥</span>
+          </div>
+        </div>
+
+        <button type="button" class="hud__pause" id="pause-button" aria-controls="pause-menu">
+          Pause
+        </button>
+      </header>
+
+      <main class="game-stage">
+        <canvas
+          id="game-canvas"
+          class="game-canvas"
+          width="960"
+          height="540"
+          aria-label="Dragon Adventure game view"
+        ></canvas>
       </main>
+
+      <aside
+        id="pause-menu"
+        class="pause-menu"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pause-title"
+      >
+        <h2 id="pause-title">Paused</h2>
+        <p>Take a breath — Cruul can wait!</p>
+        <nav class="pause-menu__actions" aria-label="Pause menu">
+          <button type="button" class="pause-menu__btn" id="resume-button">Resume</button>
+          <a class="pause-menu__btn pause-menu__btn--home" href="home.html">Back Home</a>
+        </nav>
+      </aside>
     </div>
+
+    <script src="js/game.js" defer></script>
   </body>
 </html>

@@ -1,0 +1,253 @@
+/* Dragon Adventure — game screen styles for young explorers */
+
+:root {
+  --ink: #1b2a4a;
+  --paper: #fffaf0;
+  --berry: #ff4d6d;
+  --mango: #ff9f1c;
+  --lemon: #ffd166;
+  --mint: #80ed99;
+  --sky: #00bbf9;
+  --heart: #ff6b8a;
+  --shadow: 0 6px 14px rgba(27, 42, 74, 0.12);
+
+  --font-display: 'Fredoka', 'Nunito', sans-serif;
+  --font-body: 'Nunito', 'Fredoka', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(255, 214, 120, 0.45), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 90% 15%, rgba(0, 187, 249, 0.3), transparent 52%),
+    linear-gradient(180deg, #7ec8e3 0%, #b8f2c8 55%, #ffe566 100%);
+  background-attachment: fixed;
+}
+
+.game-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.75rem;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hud__level {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 250, 240, 0.94);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  max-width: min(100%, 18rem);
+}
+
+.hud__label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  line-height: 1.1;
+}
+
+.hud__goal {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #243552;
+}
+
+.hud__meters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.hud__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.45rem;
+  border-radius: 1.15rem;
+  background: rgba(255, 250, 240, 0.94);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.hud__stat-total {
+  opacity: 0.55;
+  font-size: 0.9em;
+}
+
+.hud__icon--star {
+  color: var(--lemon);
+  font-size: 1.35rem;
+  text-shadow: 0 1px 0 var(--ink);
+}
+
+.hud__icon--coin {
+  color: var(--sky);
+  font-size: 1.2rem;
+}
+
+.hud__stat--hearts {
+  gap: 0.2rem;
+  padding-inline: 0.55rem;
+}
+
+.hud__heart {
+  color: var(--heart);
+  font-size: 1.35rem;
+  line-height: 1;
+  text-shadow: 0 1px 0 var(--ink);
+}
+
+.hud__pause {
+  appearance: none;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  min-height: 3rem;
+  padding: 0.55rem 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffe08a 0%, var(--lemon) 55%, #f4b942 100%);
+  box-shadow: 0 5px 0 rgba(27, 42, 74, 0.12);
+  cursor: pointer;
+}
+
+.hud__pause:hover {
+  filter: brightness(1.04);
+}
+
+.hud__pause:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(27, 42, 74, 0.12);
+}
+
+.hud__pause:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.game-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.game-canvas {
+  width: min(100%, 960px);
+  height: auto;
+  max-height: calc(100vh - 7.5rem);
+  aspect-ratio: 960 / 540;
+  border: 4px solid var(--ink);
+  border-radius: 1.25rem;
+  background: #7ec8e3;
+  box-shadow: var(--shadow);
+  display: block;
+}
+
+.pause-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  gap: 0.65rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(27, 42, 74, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.pause-menu[hidden] {
+  display: none;
+}
+
+.pause-menu h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  color: var(--paper);
+}
+
+.pause-menu p {
+  margin: 0 0 0.5rem;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: rgba(255, 250, 240, 0.92);
+}
+
+.pause-menu__actions {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.pause-menu__btn {
+  appearance: none;
+  border: 0;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12rem;
+  min-height: 3.1rem;
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--ink);
+  background: linear-gradient(180deg, #a8f5b8 0%, var(--mint) 55%, #5fd67d 100%);
+  box-shadow: 0 6px 0 rgba(27, 42, 74, 0.16);
+  cursor: pointer;
+}
+
+.pause-menu__btn--home {
+  background: linear-gradient(180deg, #c9f7ff 0%, var(--sky) 55%, #7ad7e8 100%);
+}
+
+@media (max-width: 640px) {
+  .hud {
+    flex-direction: column;
+  }
+
+  .hud__meters {
+    justify-content: flex-start;
+  }
+
+  .hud__pause {
+    width: 100%;
+  }
+}
