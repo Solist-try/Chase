@@ -1,0 +1,67 @@
+:root {
+  --font-display: 'Fredoka', 'Nunito', sans-serif;
+  --font-body: 'Nunito', 'Fredoka', sans-serif;
+  --ink: #1b2a4a;
+  --paper: #fffaf0;
+  --sky: #7ec8e3;
+  --meadow: #6fbf73;
+  --ember: #e85d4c;
+  --star: #ffd166;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 90% 60% at 10% 0%, rgba(255, 209, 102, 0.35), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(126, 200, 227, 0.45), transparent 45%),
+    linear-gradient(180deg, #b9e4f2 0%, #d7f0c8 48%, #8fd39a 100%);
+}
+
+#root {
+  display: grid;
+}
+
+.game-shell {
+  position: relative;
+  width: min(100%, 960px);
+  margin: auto;
+  aspect-ratio: 16 / 9;
+  border: 4px solid var(--ink);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #7ec8e3;
+  box-shadow: 0 16px 0 rgba(27, 42, 74, 0.18);
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+@media (max-width: 720px) {
+  .game-shell {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
