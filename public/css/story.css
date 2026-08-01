@@ -1,4 +1,6 @@
-/* Dragon Adventure — story intro with large text and bright colors */
+/* Dragon Adventure — story intro
+   rainbow background · centered text · soft fade-in animations
+*/
 
 :root {
   --ink: #1b2a4a;
@@ -9,7 +11,6 @@
   --mint: #80ed99;
   --sky: #00bbf9;
   --grape: #b5179e;
-  --teal: #2ec4b6;
 
   --font-display: 'Fredoka', 'Nunito', sans-serif;
   --font-body: 'Nunito', 'Fredoka', sans-serif;
@@ -39,23 +40,36 @@ body {
   min-height: 100%;
 }
 
+/* ---------- Rainbow background ---------- */
 body {
   font-family: var(--font-body);
   color: var(--ink);
   background:
-    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(255, 77, 109, 0.35), transparent 55%),
-    radial-gradient(ellipse 55% 45% at 88% 16%, rgba(0, 187, 249, 0.35), transparent 52%),
-    radial-gradient(ellipse 50% 35% at 50% 100%, rgba(255, 209, 102, 0.4), transparent 55%),
-    linear-gradient(180deg, #7ec8e3 0%, #b8f2c8 48%, #ffe566 100%);
+    radial-gradient(ellipse 50% 40% at 12% 12%, rgba(255, 255, 255, 0.35), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 88% 18%, rgba(255, 255, 255, 0.25), transparent 50%),
+    linear-gradient(
+      135deg,
+      #ff4d6d 0%,
+      #ff9f1c 18%,
+      #ffe566 36%,
+      #80ed99 54%,
+      #00bbf9 72%,
+      #b5179e 90%,
+      #ff4d6d 100%
+    );
+  background-size: 100% 100%, 100% 100%, 200% 200%;
   background-attachment: fixed;
+  animation: story-bg-shift 14s ease-in-out infinite alternate;
 }
 
+/* ---------- Centered layout + text ---------- */
 .story-page {
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: clamp(1rem, 4vw, 2.5rem);
+  text-align: center;
 }
 
 .story-card {
@@ -73,6 +87,8 @@ body {
   background-origin: border-box;
   background-clip: padding-box, border-box;
   box-shadow: var(--shadow-soft);
+  /* Soft fade-in for the whole card */
+  animation: story-fade-in 0.9s ease-out both;
 }
 
 .story-card__chapter {
@@ -83,6 +99,7 @@ body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--berry);
+  animation: story-fade-up 0.8s ease-out 0.1s both;
 }
 
 .story-card__brand {
@@ -91,16 +108,20 @@ body {
   font-size: clamp(2.4rem, 8vw, 3.6rem);
   font-weight: 700;
   line-height: 1.05;
+  text-align: center;
   background: var(--rainbow);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: story-rainbow 8s linear infinite;
+  animation:
+    story-fade-up 0.85s ease-out 0.2s both,
+    story-rainbow 8s linear 1s infinite;
 }
 
 .story-dragon {
   margin: 0.25rem 0 0;
+  animation: story-fade-up 0.9s ease-out 0.35s both;
 }
 
 .story-dragon svg {
@@ -109,7 +130,7 @@ body {
   height: auto;
   margin-inline: auto;
   filter: drop-shadow(0 12px 16px rgba(27, 42, 74, 0.16));
-  animation: story-bob 2.8s ease-in-out infinite;
+  animation: story-bob 2.8s ease-in-out 1.2s infinite;
 }
 
 .story-dragon figcaption {
@@ -117,10 +138,10 @@ body {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.05rem;
+  text-align: center;
   color: rgba(27, 42, 74, 0.72);
 }
 
-/* Large readable intro text */
 .story-card__text {
   margin: 0.35rem 0 0;
   max-width: 28rem;
@@ -128,8 +149,10 @@ body {
   font-size: clamp(1.45rem, 4.2vw, 1.9rem);
   font-weight: 600;
   line-height: 1.4;
+  text-align: center;
   color: var(--ink);
   text-wrap: balance;
+  animation: story-fade-up 0.95s ease-out 0.5s both;
 }
 
 .story-next {
@@ -152,7 +175,9 @@ body {
   background-clip: padding-box, border-box;
   box-shadow: var(--shadow-btn);
   transition: transform 0.15s ease, filter 0.15s ease;
-  animation: story-pulse 2.4s ease-in-out 1s infinite;
+  animation:
+    story-fade-up 1s ease-out 0.65s both,
+    story-pulse 2.4s ease-in-out 1.8s infinite;
 }
 
 .story-next:hover {
@@ -174,7 +199,37 @@ body {
   margin: 0;
   font-weight: 800;
   font-size: 1.15rem;
+  text-align: center;
   color: rgba(27, 42, 74, 0.75);
+  animation: story-fade-up 1s ease-out 0.8s both;
+}
+
+/* ---------- Soft animations ---------- */
+@keyframes story-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes story-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes story-bg-shift {
+  from { background-position: 0% 50%, 0% 50%, 0% 40%; }
+  to { background-position: 0% 50%, 0% 50%, 100% 60%; }
 }
 
 @keyframes story-rainbow {
@@ -190,4 +245,18 @@ body {
 @keyframes story-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .story-card,
+  .story-card__chapter,
+  .story-card__brand,
+  .story-dragon,
+  .story-dragon svg,
+  .story-card__text,
+  .story-next,
+  .story-card__hint {
+    animation: none !important;
+  }
 }
