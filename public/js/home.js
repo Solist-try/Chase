@@ -1,6 +1,6 @@
 /**
  * Home page buttons for Dragon Adventure!
- * Start Game → game.html
+ * Start Game → story.html (then Level 1)
  * Settings → settings.html
  */
 
@@ -14,7 +14,7 @@ function setupHomeButtons() {
 
   if (startButton) {
     startButton.addEventListener('click', function () {
-      goToPage('game.html');
+      goToPage('story.html');
     });
   }
 
