@@ -150,11 +150,9 @@ export class Dragon extends Character {
     this.playHappy(0.4);
   }
 
-  heal(amount = 1): void {
-    this.stats.health = Math.min(
-      this.stats.maxHealth,
-      this.stats.health + amount,
-    );
+  heal(_amount = 1): void {
+    // Kids mode: health stays full — hearts are celebration, not a worry meter.
+    this.stats.health = this.stats.maxHealth;
     this.playHappy(0.45);
   }
 
