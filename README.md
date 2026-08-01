@@ -34,17 +34,17 @@ On smaller screens, on-screen touch controls appear.
 
 ```
 src/
-  engine/       # physics, movement, collisions, camera, input, game loop
+  engine/       # GameEngine, physics, movement, collisions, input, camera
   characters/   # Dragon (player), NPC base types
-  levels/       # level configs, runtime Level, level art placeholders
-    assets/     # per-level background SVGs
+  levels/       # level configs + optional per-level assets
   ui/           # menus, HUD, buttons, dialogue, touch controls
-  assets/       # shared images/ and sounds/
+  assets/       # sprites/, backgrounds/, sounds/ placeholders
   game/         # React canvas host (GameCanvas)
 ```
 
 ### Engine (`src/engine`)
 
+- `GameEngine.ts` — rAF loop, `handleInput` / `update` / `render`, kid-tuned physics  
 - `physics.ts` — gravity / integration helpers  
 - `movement.ts` — top-down + platformer movement  
 - `collisions.ts` — AABB overlap + resolution  
@@ -70,6 +70,7 @@ src/
 ## Design notes (age 8)
 
 - Bright, readable colors and large interactive targets  
-- Forgiving top-down movement (no precision platforming required)  
+- Forgiving jumps (coyote time + jump buffer) via `KIDS_DIFFICULTY`  
+- Slow NPC / enemy patrol speeds  
 - Short goals and friendly NPC dialogue  
 - Keyboard + touch support

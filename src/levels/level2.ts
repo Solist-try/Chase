@@ -63,7 +63,7 @@ export const level2: LevelConfig = {
     },
   ],
   assets: {
-    backgroundImage: 'levels/forest-bg.svg',
-    music: 'music/forest-theme.placeholder',
+    backgroundImage: 'assets/backgrounds/forest.svg',
+    music: 'assets/sounds/forest-theme.wav',
   },
 };

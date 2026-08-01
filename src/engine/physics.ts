@@ -1,10 +1,13 @@
 import type { PhysicsBody, Vector2 } from './types';
 
-/** Gravity and simple velocity integration for platform-style movement. */
-export const GRAVITY = 1800;
-export const MAX_FALL_SPEED = 900;
-export const FRICTION = 0.82;
-export const AIR_CONTROL = 0.55;
+/**
+ * Default gravity helpers for platform-style movement.
+ * Prefer `KIDS_DIFFICULTY` / `GameEngine` for the age-8 adventure feel.
+ */
+export const GRAVITY = 1350;
+export const MAX_FALL_SPEED = 680;
+export const FRICTION = 0.78;
+export const AIR_CONTROL = 0.9;
 
 export function applyGravity(body: PhysicsBody, dt: number): void {
   if (body.grounded) return;

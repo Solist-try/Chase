@@ -1,3 +1,4 @@
+import { KIDS_DIFFICULTY } from '@engine/GameEngine';
 import type { InputState, Rect } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
 import { Character, type CharacterOptions } from './Character';
@@ -29,7 +30,7 @@ export class NPC extends Character {
       this.patrol = {
         minX: options.patrol.minX,
         maxX: options.patrol.maxX,
-        speed: options.patrol.speed ?? 60,
+        speed: options.patrol.speed ?? KIDS_DIFFICULTY.enemySpeed,
       };
     }
   }

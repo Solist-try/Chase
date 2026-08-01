@@ -6,3 +6,9 @@ export { InputManager } from './Input';
 export { Camera } from './Camera';
 export { GameLoop } from './GameLoop';
 export { Renderer } from './Renderer';
+export {
+  GameEngine,
+  KIDS_DIFFICULTY,
+  type KidsDifficulty,
+  type GameEngineOptions,
+} from './GameEngine';

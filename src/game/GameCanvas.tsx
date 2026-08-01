@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera } from '@engine/Camera';
-import { GameLoop } from '@engine/GameLoop';
-import { InputManager } from '@engine/Input';
+import { GameEngine } from '@engine/GameEngine';
 import { Renderer } from '@engine/Renderer';
+import type { InputManager } from '@engine/Input';
 import { Dragon } from '@characters/Dragon';
 import type { NPC } from '@characters/NPC';
 import { getNextLevelId, loadLevel } from '@levels/LevelLoader';
@@ -30,7 +30,7 @@ interface DialogueState {
 export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<InputManager | null>(null);
-  const pausedRef = useRef(false);
+  const engineRef = useRef<GameEngine | null>(null);
   const dialogueRef = useRef<DialogueState | null>(null);
   const actionLatch = useRef(false);
   const nextLatch = useRef(false);
@@ -51,10 +51,6 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = new Renderer(canvas);
-    const input = new InputManager();
-    inputRef.current = input;
-
     const level = loadLevel(levelId);
     const dragon = new Dragon({
       x: level.config.spawn.x,
@@ -66,40 +62,36 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
     );
 
     let nearby: NPC | null = null;
-    pausedRef.current = false;
+    let renderer: Renderer | null = null;
     dialogueRef.current = null;
-    setPaused(false);
     setDialogue(null);
+    setPaused(false);
     setLevelName(level.config.name);
     setGoal(level.config.goal);
     setStats({ ...dragon.stats });
     setLevelState(level.getState());
 
-    const loop = new GameLoop(
-      (dt) => {
-        const state = input.getState();
+    const engine = new GameEngine({
+      canvas,
+      clearColor: level.config.background,
+      onPauseChange: (value) => setPaused(value),
+      onUpdate: (dt, input) => {
+        if (dialogueRef.current) return;
 
-        if (state.pause) {
-          pausedRef.current = !pausedRef.current;
-          setPaused(pausedRef.current);
-        }
-
-        if (pausedRef.current || dialogueRef.current) {
-          return;
-        }
-
-        dragon.update(dt, state, level.solids);
+        // Top-down adventure movement (current levels). Platform physics
+        // helpers live on GameEngine for side-scrolling stages.
+        dragon.update(dt, input, level.solids);
         nearby = level.update(dt, dragon);
         camera.follow(dragon.center);
 
-        if (state.action && nearby && !actionLatch.current) {
+        if (input.action && nearby && !actionLatch.current) {
           actionLatch.current = true;
           nearby.setTalking(true);
           const nextDialogue = { lines: nearby.dialogue, index: 0, npc: nearby };
           dialogueRef.current = nextDialogue;
           setDialogue(nextDialogue);
         }
-        if (!state.action) {
+        if (!input.action) {
           actionLatch.current = false;
         }
 
@@ -107,15 +99,19 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
         setLevelState(level.getState());
         setNearbyName(nearby?.name ?? null);
       },
-      () => {
+      onRender: (ctx) => {
+        renderer ??= new Renderer(canvas);
         renderer.clear(level.config.background);
-        renderer.ctx.save();
-        camera.apply(renderer.ctx);
+        ctx.save();
+        camera.apply(ctx);
         level.draw(renderer);
         dragon.draw(renderer);
-        renderer.ctx.restore();
+        ctx.restore();
       },
-    );
+    });
+
+    engineRef.current = engine;
+    inputRef.current = engine.input;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'KeyN' || nextLatch.current) return;
@@ -130,11 +126,11 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
-    loop.start();
+    engine.start();
 
     return () => {
-      loop.stop();
-      input.dispose();
+      engine.stop();
+      engineRef.current = null;
       inputRef.current = null;
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
@@ -143,7 +139,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
   }, [levelId, onLevelChange]);
 
   const resume = () => {
-    pausedRef.current = false;
+    engineRef.current?.setPaused(false);
     setPaused(false);
   };
 

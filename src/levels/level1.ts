@@ -47,7 +47,7 @@ export const level1: LevelConfig = {
     },
   ],
   assets: {
-    backgroundImage: 'levels/meadow-bg.svg',
-    music: 'music/meadow-theme.placeholder',
+    backgroundImage: 'assets/backgrounds/meadow.svg',
+    music: 'assets/sounds/meadow-theme.wav',
   },
 };

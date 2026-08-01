@@ -1,13 +1,14 @@
 # Assets
 
-Place shared art and audio here.
+Shared game media for Chase.
 
 ```
 src/assets/
-  images/   # sprites, UI art, tiles
-  sounds/   # SFX and music
+  sprites/       # character & collectible placeholders (SVG)
+  backgrounds/   # level & menu backdrop placeholders (SVG)
+  sounds/        # SFX + music bed stubs (WAV)
+  manifest.ts    # stable import map for the files above
 ```
 
-Level-specific configs live under `src/levels/`. Optional level art references are declared on each `LevelConfig.assets` entry (for example `levels/meadow-bg.svg`).
-
-Placeholder SVG backgrounds for levels are in `src/levels/assets/`.
+Level configs under `src/levels/` reference these paths via `LevelConfig.assets`.
+Replace placeholders in place (same filenames) when final art/audio is ready.
