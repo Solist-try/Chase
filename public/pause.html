@@ -22,11 +22,19 @@
         </header>
 
         <nav class="pause-modal__actions" aria-label="Pause menu">
-          <a class="pause-btn pause-btn--resume" href="game.html">Resume</a>
-          <a class="pause-btn pause-btn--restart" href="game.html?restart=1">Restart Level</a>
-          <a class="pause-btn pause-btn--home" href="home.html">Back to Home</a>
+          <button type="button" class="pause-btn pause-btn--resume" id="resume-button">
+            Resume
+          </button>
+          <button type="button" class="pause-btn pause-btn--restart" id="restart-button">
+            Restart Level
+          </button>
+          <button type="button" class="pause-btn pause-btn--home" id="home-button">
+            Back to Home
+          </button>
         </nav>
       </section>
     </main>
+
+    <script src="js/pause.js" defer></script>
   </body>
 </html>
