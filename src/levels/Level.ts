@@ -1,17 +1,23 @@
 import { CollisionEngine } from '@engine/CollisionEngine';
-import { bodyToRect, distance, rectsOverlap } from '@engine/collisions';
+import { bodyToRect, distance } from '@engine/collisions';
 import type { Rect, Vector2 } from '@engine/types';
 import type { Renderer } from '@engine/Renderer';
+import { Collectible } from '@characters/Collectible';
 import { Dragon } from '@characters/Dragon';
 import { Enemy } from '@characters/Enemy';
 import { NPC } from '@characters/NPC';
 import { getTheme } from './themes';
-import type { Collectible, LevelConfig, LevelGoal } from './types';
+import type { LevelConfig, LevelGoal } from './types';
 
 export interface LevelRuntimeState {
   starsCollected: number;
   starsTotal: number;
+  /** Rainbow gems (includes legacy coin pickups). */
+  gemsCollected: number;
+  gemsTotal: number;
+  /** @deprecated Alias of gemsCollected for older HUD callers. */
   coinsCollected: number;
+  /** @deprecated Alias of gemsTotal for older HUD callers. */
   coinsTotal: number;
   goalComplete: boolean;
   goalDescription: string;
@@ -33,11 +39,7 @@ export class Level {
   constructor(config: LevelConfig) {
     this.config = config;
     this.solids = config.platforms.map((p) => ({ ...p.rect }));
-    this.collectibles = config.collectibles.map((c) => ({
-      ...c,
-      position: { ...c.position },
-      collected: false,
-    }));
+    this.collectibles = config.collectibles.map((c) => new Collectible(c));
     this.npcs = config.npcs.map(
       (n) =>
         new NPC({
@@ -75,16 +77,18 @@ export class Level {
     const starsCollected = this.collectibles.filter(
       (c) => c.kind === 'star' && c.collected,
     ).length;
-    const coinsTotal = this.collectibles.filter((c) => c.kind === 'coin').length;
-    const coinsCollected = this.collectibles.filter(
-      (c) => c.kind === 'coin' && c.collected,
+    const gemsTotal = this.collectibles.filter((c) => c.isGem).length;
+    const gemsCollected = this.collectibles.filter(
+      (c) => c.isGem && c.collected,
     ).length;
 
     return {
       starsCollected,
       starsTotal,
-      coinsCollected,
-      coinsTotal,
+      gemsCollected,
+      gemsTotal,
+      coinsCollected: gemsCollected,
+      coinsTotal: gemsTotal,
       goalComplete: this.isGoalComplete(),
       goalDescription: this.config.goal.description,
     };
@@ -107,8 +111,11 @@ export class Level {
     for (const enemy of this.enemies) {
       enemy.update(dt);
     }
+    for (const item of this.collectibles) {
+      item.update(dt);
+      item.tryCollect(dragon);
+    }
 
-    this.pickupCollectibles(dragon);
     // Non-harmful: dragon bounce animation + soft physics knockback
     const bump = this.collisions.resolveEnemyBounce(
       dragon.body,
@@ -135,9 +142,7 @@ export class Level {
     const stars = this.collectibles.filter(
       (c) => c.kind === 'star' && c.collected,
     ).length;
-    const coins = this.collectibles.filter(
-      (c) => c.kind === 'coin' && c.collected,
-    ).length;
+    const coins = this.collectibles.filter((c) => c.isGem && c.collected).length;
     const need = goal.collectCount ?? 0;
 
     switch (goal.type) {
@@ -173,24 +178,6 @@ export class Level {
     const radius = marker.radius ?? 70;
     if (distance(dragon.center, marker.position) <= radius) {
       this.markerReached = true;
-    }
-  }
-
-  private pickupCollectibles(dragon: Dragon): void {
-    const bounds = dragon.bounds;
-    for (const item of this.collectibles) {
-      if (item.collected) continue;
-      const itemRect: Rect = {
-        x: item.position.x,
-        y: item.position.y,
-        width: 28,
-        height: 28,
-      };
-      if (!rectsOverlap(bounds, itemRect)) continue;
-      item.collected = true;
-      if (item.kind === 'star') dragon.collectStar();
-      else if (item.kind === 'heart') dragon.heal(1);
-      else dragon.collectCoin();
     }
   }
 
@@ -250,8 +237,7 @@ export class Level {
     }
 
     for (const item of this.collectibles) {
-      if (item.collected) continue;
-      this.drawCollectible(renderer, item, theme.accent);
+      item.draw(renderer);
     }
 
     for (const enemy of this.enemies) {
@@ -297,57 +283,6 @@ export class Level {
     renderer.drawCircle({ x, y }, 22, color);
     renderer.drawCircle({ x: x + 24, y: y - 6 }, 28, color);
     renderer.drawCircle({ x: x + 50, y: y }, 20, color);
-  }
-
-  private drawCollectible(
-    renderer: Renderer,
-    item: Collectible,
-    accent: string,
-  ): void {
-    const bounce = Math.sin(this.treePhase * 5 + item.position.x * 0.01) * 4;
-    const x = item.position.x;
-    const y = item.position.y + bounce;
-
-    if (item.kind === 'star') {
-      renderer.ctx.fillStyle = accent;
-      renderer.ctx.beginPath();
-      for (let i = 0; i < 5; i++) {
-        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-        const outer = 14;
-        const inner = 6;
-        const ox = x + 14 + Math.cos(angle) * outer;
-        const oy = y + 14 + Math.sin(angle) * outer;
-        const ix = x + 14 + Math.cos(angle + Math.PI / 5) * inner;
-        const iy = y + 14 + Math.sin(angle + Math.PI / 5) * inner;
-        if (i === 0) renderer.ctx.moveTo(ox, oy);
-        else renderer.ctx.lineTo(ox, oy);
-        renderer.ctx.lineTo(ix, iy);
-      }
-      renderer.ctx.closePath();
-      renderer.ctx.fill();
-      return;
-    }
-
-    if (item.kind === 'coin') {
-      renderer.drawCircle({ x: x + 14, y: y + 14 }, 12, '#FFD166');
-      renderer.drawCircle({ x: x + 14, y: y + 14 }, 8, '#FFE566');
-      renderer.drawText('$', x + 14, y + 15, {
-        size: 12,
-        align: 'center',
-        color: '#E85D04',
-      });
-      return;
-    }
-
-    // heart
-    renderer.drawCircle({ x: x + 10, y: y + 12 }, 8, '#ff6b8a');
-    renderer.drawCircle({ x: x + 20, y: y + 12 }, 8, '#ff6b8a');
-    renderer.ctx.fillStyle = '#ff6b8a';
-    renderer.ctx.beginPath();
-    renderer.ctx.moveTo(x + 4, y + 14);
-    renderer.ctx.lineTo(x + 15, y + 26);
-    renderer.ctx.lineTo(x + 26, y + 14);
-    renderer.ctx.fill();
   }
 
   /** Debug helper. */

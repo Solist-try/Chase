@@ -14,14 +14,19 @@ export interface Platform {
 /** @deprecated Prefer {@link Platform} — kept for older solid-block naming. */
 export type SolidBlock = Platform;
 
-export type CollectibleKind = 'star' | 'coin' | 'heart';
+/** `coin` kept as a friendly alias for rainbow `gem`. */
+export type CollectibleKind = 'star' | 'gem' | 'heart' | 'coin';
 
-export interface Collectible {
+/** Level-config spawn descriptor (runtime class lives in Collectible.ts). */
+export interface CollectibleSpawn {
   id: string;
   position: Vector2;
   kind: CollectibleKind;
   collected?: boolean;
 }
+
+/** @deprecated Use {@link CollectibleSpawn} — runtime items are `Collectible` class instances. */
+export type Collectible = CollectibleSpawn;
 
 export interface NPCSpawn {
   id: string;
@@ -82,7 +87,7 @@ export interface LevelConfig {
   spawn: Vector2;
   platforms: Platform[];
   enemies: EnemySpawn[];
-  collectibles: Collectible[];
+  collectibles: CollectibleSpawn[];
   npcs: NPCSpawn[];
   /** Optional path hints for art under src/assets. */
   assets?: {

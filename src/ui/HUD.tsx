@@ -38,11 +38,11 @@ export function HUD({
             </span>
           </div>
 
-          <div className="hud__stat" title="Coins collected">
-            <CoinIcon />
+          <div className="hud__stat" title="Rainbow gems collected">
+            <GemIcon />
             <span className="hud__stat-value">
-              {levelState.coinsCollected}
-              <span className="hud__stat-total">/{levelState.coinsTotal}</span>
+              {levelState.gemsCollected}
+              <span className="hud__stat-total">/{levelState.gemsTotal}</span>
             </span>
           </div>
 
@@ -87,28 +87,31 @@ function StarIcon() {
   );
 }
 
-function CoinIcon() {
+function GemIcon() {
   return (
     <svg
-      className="hud__icon hud__icon--coin"
+      className="hud__icon hud__icon--gem"
       viewBox="0 0 48 48"
       width="40"
       height="40"
       aria-hidden="true"
     >
-      <circle cx="24" cy="24" r="18" fill="#FFD166" stroke="#1B2A4A" strokeWidth="2.5" />
-      <circle cx="24" cy="24" r="12" fill="#FFE566" stroke="#E85D04" strokeWidth="2" />
-      <text
-        x="24"
-        y="29"
-        textAnchor="middle"
-        fontSize="14"
-        fontWeight="700"
-        fontFamily="Fredoka, Nunito, sans-serif"
-        fill="#E85D04"
-      >
-        ★
-      </text>
+      <defs>
+        <linearGradient id="hudGemGrad" x1="8" y1="6" x2="40" y2="42">
+          <stop offset="0%" stopColor="#FF4D6D" />
+          <stop offset="35%" stopColor="#FFE566" />
+          <stop offset="70%" stopColor="#00BBF9" />
+          <stop offset="100%" stopColor="#B5179E" />
+        </linearGradient>
+      </defs>
+      <polygon
+        points="24,4 40,24 24,44 8,24"
+        fill="url(#hudGemGrad)"
+        stroke="#1B2A4A"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <polygon points="24,10 30,24 24,24 18,24" fill="rgba(255,250,240,0.45)" />
     </svg>
   );
 }

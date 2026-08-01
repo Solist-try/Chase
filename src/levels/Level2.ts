@@ -65,9 +65,9 @@ export const Level2: LevelConfig = {
     },
   ],
   collectibles: [
-    { id: 'coin-1', position: { x: 320, y: 640 }, kind: 'coin' },
-    { id: 'coin-2', position: { x: 560, y: 520 }, kind: 'coin' },
-    { id: 'coin-3', position: { x: 860, y: 400 }, kind: 'coin' },
+    { id: 'coin-1', position: { x: 320, y: 640 }, kind: 'gem' },
+    { id: 'coin-2', position: { x: 560, y: 520 }, kind: 'gem' },
+    { id: 'coin-3', position: { x: 860, y: 400 }, kind: 'gem' },
     { id: 'star-1', position: { x: 1140, y: 540 }, kind: 'star' },
     { id: 'star-2', position: { x: 1340, y: 660 }, kind: 'star' },
     { id: 'heart-1', position: { x: 700, y: 800 }, kind: 'heart' },

@@ -5,6 +5,7 @@ export type {
   Platform,
   SolidBlock,
   Collectible,
+  CollectibleSpawn,
   CollectibleKind,
   NPCSpawn,
   EnemySpawn,

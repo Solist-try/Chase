@@ -10,3 +10,4 @@ export {
 } from './Dragon';
 export { NPC, type DialogueLine, type NPCOptions } from './NPC';
 export { Enemy, type EnemyOptions, type EnemyPatrol } from './Enemy';
+export { Collectible, type CollectibleSpawn } from './Collectible';

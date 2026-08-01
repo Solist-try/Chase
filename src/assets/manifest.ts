@@ -14,6 +14,7 @@ import forestBackground from './backgrounds/forest.svg';
 import menuBackground from './backgrounds/menu.svg';
 
 import collectStarSound from './sounds/collect-star.wav';
+import collectGemSound from './sounds/collect-gem.wav';
 import collectHeartSound from './sounds/collect-heart.wav';
 import talkBlipSound from './sounds/talk-blip.wav';
 import uiClickSound from './sounds/ui-click.wav';
@@ -36,6 +37,7 @@ export const backgrounds = {
 
 export const sounds = {
   collectStar: collectStarSound,
+  collectGem: collectGemSound,
   collectHeart: collectHeartSound,
   talkBlip: talkBlipSound,
   uiClick: uiClickSound,

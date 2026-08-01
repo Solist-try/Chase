@@ -11,7 +11,7 @@ export const Level3: LevelConfig = {
   theme: 'cotton',
   goal: {
     type: 'reach_tree',
-    description: 'Collect 5 coins, then reach the candy tree!',
+    description: 'Collect 5 rainbow gems, then reach the candy tree!',
     collectCount: 5,
     marker: {
       kind: 'tree',
@@ -81,11 +81,11 @@ export const Level3: LevelConfig = {
     },
   ],
   collectibles: [
-    { id: 'coin-1', position: { x: 280, y: 640 }, kind: 'coin' },
-    { id: 'coin-2', position: { x: 500, y: 520 }, kind: 'coin' },
-    { id: 'coin-3', position: { x: 740, y: 420 }, kind: 'coin' },
-    { id: 'coin-4', position: { x: 1020, y: 540 }, kind: 'coin' },
-    { id: 'coin-5', position: { x: 1260, y: 440 }, kind: 'coin' },
+    { id: 'coin-1', position: { x: 280, y: 640 }, kind: 'gem' },
+    { id: 'coin-2', position: { x: 500, y: 520 }, kind: 'gem' },
+    { id: 'coin-3', position: { x: 740, y: 420 }, kind: 'gem' },
+    { id: 'coin-4', position: { x: 1020, y: 540 }, kind: 'gem' },
+    { id: 'coin-5', position: { x: 1260, y: 440 }, kind: 'gem' },
     { id: 'star-1', position: { x: 1520, y: 580 }, kind: 'star' },
     { id: 'heart-1', position: { x: 880, y: 800 }, kind: 'heart' },
   ],
@@ -99,7 +99,7 @@ export const Level3: LevelConfig = {
       dialogue: [
         {
           speaker: 'Pip',
-          text: 'Candy coins first — then race to the sparkly tree!',
+          text: 'Rainbow gems first — then race to the sparkly tree!',
         },
       ],
     },

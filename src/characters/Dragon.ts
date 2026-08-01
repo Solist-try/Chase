@@ -149,6 +149,10 @@ export class Dragon extends Character {
   }
 
   collectCoin(): void {
+    this.collectGem();
+  }
+
+  collectGem(): void {
     this.stats.coins += 1;
     this.playHappy(0.4);
   }

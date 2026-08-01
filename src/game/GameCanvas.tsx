@@ -54,6 +54,8 @@ interface DialogueState {
 const EMPTY_LEVEL_STATE: LevelRuntimeState = {
   starsCollected: 0,
   starsTotal: 0,
+  gemsCollected: 0,
+  gemsTotal: 0,
   coinsCollected: 0,
   coinsTotal: 0,
   goalComplete: false,

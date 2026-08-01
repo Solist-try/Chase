@@ -53,8 +53,8 @@ export const Level1: LevelConfig = {
     { id: 'star-1', position: { x: 300, y: 460 }, kind: 'star' },
     { id: 'star-2', position: { x: 530, y: 360 }, kind: 'star' },
     { id: 'star-3', position: { x: 780, y: 260 }, kind: 'star' },
-    { id: 'coin-1', position: { x: 400, y: 620 }, kind: 'coin' },
-    { id: 'coin-2', position: { x: 900, y: 620 }, kind: 'coin' },
+    { id: 'coin-1', position: { x: 400, y: 620 }, kind: 'gem' },
+    { id: 'coin-2', position: { x: 900, y: 620 }, kind: 'gem' },
     { id: 'heart-1', position: { x: 1020, y: 420 }, kind: 'heart' },
   ],
   npcs: [

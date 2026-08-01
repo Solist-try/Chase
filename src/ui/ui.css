@@ -277,7 +277,7 @@
   animation: hud-wiggle 2.4s ease-in-out infinite;
 }
 
-.hud__icon--coin {
+.hud__icon--gem {
   animation: hud-spin-soft 3.2s ease-in-out infinite;
 }
 
