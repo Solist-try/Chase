@@ -71,52 +71,13 @@
           <button type="button" class="btn btn--start" id="start-game">
             Start Game
           </button>
-          <button
-            type="button"
-            class="btn btn--settings"
-            id="open-settings"
-            aria-expanded="false"
-            aria-controls="settings-panel"
-          >
+          <button type="button" class="btn btn--settings" id="open-settings">
             Settings
           </button>
         </nav>
-
-        <section
-          id="settings-panel"
-          class="settings"
-          hidden
-          aria-label="Game settings"
-        >
-          <h2>Settings</h2>
-          <p>Sound and difficulty options will live here for little explorers.</p>
-          <button type="button" class="btn" id="close-settings">Done</button>
-        </section>
       </main>
     </div>
 
-    <script>
-      const settingsPanel = document.getElementById('settings-panel');
-      const openSettings = document.getElementById('open-settings');
-      const closeSettings = document.getElementById('close-settings');
-      const startGame = document.getElementById('start-game');
-
-      function setSettingsOpen(open) {
-        settingsPanel.hidden = !open;
-        openSettings.setAttribute('aria-expanded', String(open));
-      }
-
-      openSettings.addEventListener('click', () => {
-        setSettingsOpen(settingsPanel.hidden);
-      });
-
-      closeSettings.addEventListener('click', () => {
-        setSettingsOpen(false);
-      });
-
-      startGame.addEventListener('click', () => {
-        window.location.href = '/';
-      });
-    </script>
+    <script src="/js/home.js" defer></script>
   </body>
 </html>
