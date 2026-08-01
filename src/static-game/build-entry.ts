@@ -24,6 +24,7 @@ function findPageElements() {
     coinTotal: getElement('coin-total'),
     pauseButton: getElement('pause-button') as HTMLButtonElement | null,
     resumeButton: getElement('resume-button') as HTMLButtonElement | null,
+    restartButton: getElement('restart-button') as HTMLButtonElement | null,
     pauseMenu: getElement('pause-menu'),
   };
 }

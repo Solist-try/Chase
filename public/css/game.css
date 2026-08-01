@@ -351,26 +351,44 @@ body {
 
 .pause-menu__btn {
   appearance: none;
-  border: 0;
+  border: 3px solid var(--ink);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 13rem;
-  min-height: 3.25rem;
-  padding: 0.85rem 1.5rem;
-  border-radius: 999px;
+  min-width: 14rem;
+  min-height: 3.6rem;
+  padding: 0.95rem 1.6rem;
+  border-radius: 1.35rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   color: var(--ink);
   background: linear-gradient(180deg, #a8f5b8 0%, var(--mint) 55%, #5fd67d 100%);
-  box-shadow: 0 6px 0 rgba(27, 42, 74, 0.16);
+  box-shadow: 0 8px 0 rgba(27, 42, 74, 0.16);
   cursor: pointer;
+}
+
+.pause-menu__btn--resume {
+  background: linear-gradient(180deg, #b7f7c5 0%, var(--mint) 55%, #5fd67d 100%);
+}
+
+.pause-menu__btn--restart {
+  background: linear-gradient(180deg, #ffe08a 0%, var(--lemon) 55%, #f4b942 100%);
 }
 
 .pause-menu__btn--home {
   background: linear-gradient(180deg, #c9f7ff 0%, var(--sky) 55%, #7ad7e8 100%);
+}
+
+.pause-menu__link {
+  margin-top: 0.25rem;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 1rem;
+  color: rgba(255, 250, 240, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 @keyframes heart-glow {

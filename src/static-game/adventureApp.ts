@@ -28,6 +28,7 @@ export interface AdventureHudElements {
   coinTotal: HTMLElement | null;
   pauseButton: HTMLButtonElement | null;
   resumeButton: HTMLButtonElement | null;
+  restartButton: HTMLButtonElement | null;
   pauseMenu: HTMLElement | null;
 }
 
@@ -109,6 +110,11 @@ export function startStaticAdventure(hud: AdventureHudElements): () => void {
   // Resume button → hide the pause menu and continue playing.
   hud.resumeButton?.addEventListener('click', () => {
     gameEngine.setPaused(false);
+  });
+
+  // Restart Level → reload the game page from the start.
+  hud.restartButton?.addEventListener('click', () => {
+    window.location.href = 'game.html?restart=1';
   });
 
   // Re-scale when the window size changes.

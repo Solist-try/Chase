@@ -38,6 +38,7 @@ function findPageElements() {
     coinTotal: getElement('coin-total'),
     pauseButton: getElement('pause-button'),
     resumeButton: getElement('resume-button'),
+    restartButton: getElement('restart-button'),
     pauseMenu: getElement('pause-menu'),
   };
 }
