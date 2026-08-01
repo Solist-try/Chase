@@ -1,0 +1,264 @@
+/* Dragon Adventure — friendly settings screen */
+
+:root {
+  --ink: #1b2a4a;
+  --paper: #fffaf0;
+  --berry: #ff4d6d;
+  --mango: #ff9f1c;
+  --lemon: #ffd166;
+  --mint: #80ed99;
+  --sky: #00bbf9;
+  --grape: #b5179e;
+
+  --font-display: 'Fredoka', 'Nunito', sans-serif;
+  --font-body: 'Nunito', 'Fredoka', sans-serif;
+
+  --shadow-soft: 0 12px 28px rgba(27, 42, 74, 0.14);
+  --shadow-btn: 0 7px 0 rgba(27, 42, 74, 0.12);
+  --rainbow: linear-gradient(
+    90deg,
+    var(--berry),
+    var(--mango),
+    var(--lemon),
+    var(--mint),
+    var(--sky),
+    var(--grape)
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 55% 40% at 12% 10%, rgba(255, 214, 120, 0.45), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 90% 16%, rgba(0, 187, 249, 0.3), transparent 52%),
+    linear-gradient(165deg, #7ec8e3 0%, #b8f2c8 50%, #ffe566 100%);
+  background-attachment: fixed;
+}
+
+.settings-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+.settings-card {
+  width: min(100%, 28rem);
+  display: grid;
+  gap: 1.15rem;
+  padding: clamp(1.35rem, 4vw, 2rem);
+  border-radius: 2rem;
+  border: 5px solid transparent;
+  background-image:
+    linear-gradient(rgba(255, 250, 240, 0.96), rgba(255, 250, 240, 0.96)),
+    var(--rainbow);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: var(--shadow-soft);
+}
+
+.settings-card__header {
+  display: grid;
+  gap: 0.35rem;
+  text-align: center;
+  justify-items: center;
+}
+
+.settings-card__eyebrow {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--berry);
+}
+
+.settings-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 8vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  background: var(--rainbow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.settings-card__lead {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: rgba(27, 42, 74, 0.8);
+  text-wrap: balance;
+}
+
+.settings-form {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.settings-fieldset {
+  margin: 0;
+  padding: 1rem;
+  border: 3px solid rgba(27, 42, 74, 0.12);
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.settings-fieldset legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.settings-legend-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.settings-hint {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(27, 42, 74, 0.72);
+  line-height: 1.35;
+}
+
+.settings-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.settings-choice {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  min-height: 5.25rem;
+  padding: 0.85rem 0.6rem;
+  border: 3px solid rgba(27, 42, 74, 0.15);
+  border-radius: 1.25rem;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(27, 42, 74, 0.08);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.settings-choice:hover {
+  transform: translateY(-2px);
+}
+
+.settings-choice:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: 3px;
+}
+
+.settings-choice.is-selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(0, 187, 249, 0.3), 0 5px 0 rgba(27, 42, 74, 0.1);
+  background: linear-gradient(180deg, #fffaf0, #e8fff2);
+}
+
+.settings-choice__icon {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.settings-choice__label {
+  line-height: 1.1;
+}
+
+.settings-status {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0b6e4f;
+  background: rgba(128, 237, 153, 0.35);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+}
+
+.settings-actions {
+  display: grid;
+}
+
+.settings-back {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 3.6rem;
+  padding: 0.85rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--ink);
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffe08a 0%, var(--lemon) 55%, #f4b942 100%);
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.settings-back:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.settings-back:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 rgba(27, 42, 74, 0.12);
+}
+
+.settings-back:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (max-width: 420px) {
+  .settings-toggle {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-choice {
+    min-height: 4.5rem;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+    padding-inline: 1rem;
+    text-align: left;
+  }
+}

@@ -10,24 +10,96 @@
       href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="css/settings.css" />
   </head>
   <body>
-    <div class="page">
-      <main>
-        <header class="hero">
-          <h1 class="title" aria-label="Settings">
-            <span>S</span><span>e</span><span>t</span><span>t</span><span>i</span><span>n</span><span>g</span><span>s</span>
-          </h1>
-          <p class="tagline">Sound and difficulty options for little explorers</p>
+    <main class="settings-page">
+      <section class="settings-card" aria-labelledby="settings-title">
+        <header class="settings-card__header">
+          <p class="settings-card__eyebrow">Make it comfy</p>
+          <h1 id="settings-title" class="settings-card__title">Settings</h1>
+          <p class="settings-card__lead">
+            Pick sound and how adventurous the journey feels!
+          </p>
         </header>
 
-        <section class="settings" aria-label="Game settings">
-          <h2>Coming soon</h2>
-          <p>Mute, volume, and Easy / Normal difficulty will live here.</p>
-          <a class="btn btn--start" href="home.html">Back Home</a>
-        </section>
-      </main>
-    </div>
+        <form class="settings-form" id="settings-form">
+          <fieldset class="settings-fieldset">
+            <legend>
+              <span class="settings-legend-icon" aria-hidden="true">🔊</span>
+              Sound
+            </legend>
+            <p class="settings-hint">Hear jumps, sparkles, and cheerful music.</p>
+
+            <div class="settings-toggle" role="group" aria-label="Sound on or off">
+              <button
+                type="button"
+                class="settings-choice is-selected"
+                id="sound-on"
+                aria-pressed="true"
+                data-sound="on"
+              >
+                <span class="settings-choice__icon" aria-hidden="true">🔈</span>
+                <span class="settings-choice__label">Sound On</span>
+              </button>
+              <button
+                type="button"
+                class="settings-choice"
+                id="sound-off"
+                aria-pressed="false"
+                data-sound="off"
+              >
+                <span class="settings-choice__icon" aria-hidden="true">🔇</span>
+                <span class="settings-choice__label">Sound Off</span>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset class="settings-fieldset">
+            <legend>
+              <span class="settings-legend-icon" aria-hidden="true">⭐</span>
+              Difficulty
+            </legend>
+            <p class="settings-hint">Easy is softer and floatier — perfect for first flights!</p>
+
+            <div class="settings-toggle" role="group" aria-label="Difficulty">
+              <button
+                type="button"
+                class="settings-choice is-selected"
+                id="difficulty-easy"
+                aria-pressed="true"
+                data-difficulty="easy"
+              >
+                <span class="settings-choice__icon" aria-hidden="true">🌱</span>
+                <span class="settings-choice__label">Easy</span>
+              </button>
+              <button
+                type="button"
+                class="settings-choice"
+                id="difficulty-normal"
+                aria-pressed="false"
+                data-difficulty="normal"
+              >
+                <span class="settings-choice__icon" aria-hidden="true">🚀</span>
+                <span class="settings-choice__label">Normal</span>
+              </button>
+            </div>
+          </fieldset>
+        </form>
+
+        <p class="settings-status" id="settings-status" aria-live="polite">
+          Sound On · Easy mode
+        </p>
+
+        <nav class="settings-actions" aria-label="Settings actions">
+          <button type="button" class="settings-back" id="back-button">
+            <span aria-hidden="true">🏠</span>
+            Back
+          </button>
+        </nav>
+      </section>
+    </main>
+
+    <script src="js/settings.js" defer></script>
   </body>
 </html>
