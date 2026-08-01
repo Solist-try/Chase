@@ -14,17 +14,19 @@
   </head>
   <body>
     <main class="pause-page">
-      <header class="pause-page__header">
-        <p class="pause-page__eyebrow">Take a breath</p>
-        <h1 class="pause-page__title">Paused!</h1>
-        <p class="pause-page__lead">Cruul can wait — what would you like to do?</p>
-      </header>
+      <section class="pause-modal" aria-labelledby="pause-title" role="dialog" aria-modal="true">
+        <header class="pause-modal__header">
+          <p class="pause-modal__eyebrow">Take a breath</p>
+          <h1 id="pause-title" class="pause-modal__title">Paused!</h1>
+          <p class="pause-modal__lead">Cruul can wait — what would you like to do?</p>
+        </header>
 
-      <nav class="pause-page__actions" aria-label="Pause menu">
-        <a class="pause-btn pause-btn--resume" href="game.html">Resume</a>
-        <a class="pause-btn pause-btn--restart" href="game.html?restart=1">Restart Level</a>
-        <a class="pause-btn pause-btn--home" href="home.html">Back to Home</a>
-      </nav>
+        <nav class="pause-modal__actions" aria-label="Pause menu">
+          <a class="pause-btn pause-btn--resume" href="game.html">Resume</a>
+          <a class="pause-btn pause-btn--restart" href="game.html?restart=1">Restart Level</a>
+          <a class="pause-btn pause-btn--home" href="home.html">Back to Home</a>
+        </nav>
+      </section>
     </main>
   </body>
 </html>
