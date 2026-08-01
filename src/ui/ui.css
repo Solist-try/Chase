@@ -381,11 +381,34 @@
   user-select: none;
 }
 
+.touch-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  pointer-events: auto;
+}
+
 .touch-btn--action {
   width: 5.2rem;
   height: 5.2rem;
   border-radius: 999px;
   background: #ffd166;
+}
+
+.touch-btn--dash {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 999px;
+  background: #80ed99;
+  font-size: 0.85rem;
+}
+
+.touch-btn--talk {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 999px;
+  background: #fffaf0;
+  font-size: 0.8rem;
 }
 
 @media (min-width: 900px) {

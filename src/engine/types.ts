@@ -24,6 +24,10 @@ export interface InputState {
   down: boolean;
   left: boolean;
   right: boolean;
+  /** Space / Up / W — platformer jump */
+  jump: boolean;
+  /** Shift — short kid-safe dash */
+  dash: boolean;
   action: boolean;
   pause: boolean;
 }

@@ -24,7 +24,9 @@ npm run lint    # TypeScript check
 | Action | Keys |
 | --- | --- |
 | Move | Arrow keys or WASD |
-| Talk | E or Space (near an NPC) |
+| Jump | Space (also Up / W) |
+| Dash | Shift (short, safe burst) |
+| Talk | E (near an NPC) |
 | Pause | Esc or P |
 | Next level | N (after all stars are collected) |
 
@@ -45,6 +47,7 @@ src/
 ### Engine (`src/engine`)
 
 - `GameEngine.ts` — rAF loop, `handleInput` / `update` / `render`, kid-tuned physics  
+- `controls.ts` — Arrow/WASD, Space jump, Shift dash (buffered & forgiving)  
 - `physics.ts` — gravity / integration helpers  
 - `movement.ts` — top-down + platformer movement  
 - `collisions.ts` — AABB overlap + resolution  

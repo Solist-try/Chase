@@ -1,15 +1,18 @@
 import { collideWithWorld } from './collisions';
+import { Controls, DASH_CONFIG } from './controls';
 import { InputManager } from './Input';
 import { integrate } from './physics';
 import type { InputState, PhysicsBody, Rect } from './types';
 
 /**
  * Difficulty profile tuned for ~age 8:
- * floaty jumps, coyote time, jump buffer, slow enemies.
+ * floaty jumps, coyote time, jump buffer, slow enemies, safe dash.
  */
 export const KIDS_DIFFICULTY = {
   /** Horizontal run speed (px/s). Slightly slower than a typical Mario-like (~220). */
   moveSpeed: 190,
+  /** Acceleration toward move speed — smoother than hard snaps. */
+  moveAccel: 1600,
   /** Upward jump impulse (px/s). Higher = easier gaps. */
   jumpForce: 580,
   /** World gravity (px/s²). Lower = longer hang time. */
@@ -50,17 +53,25 @@ export interface GameEngineOptions {
 
 interface JumpMemory {
   coyoteTimer: number;
-  bufferTimer: number;
   jumpHeld: boolean;
 }
 
+interface DashMemory {
+  timer: number;
+  cooldown: number;
+  direction: 1 | -1;
+  airUsed: boolean;
+}
+
 /**
- * Core browser game engine: rAF loop, input, update/render, kid-friendly physics.
+ * Core browser game engine: rAF loop, controls, update/render, kid-friendly physics.
  */
 export class GameEngine {
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
+  /** @deprecated Prefer {@link controls} for platformer input. */
   readonly input: InputManager;
+  readonly controls: Controls;
   readonly difficulty: KidsDifficulty;
 
   private running = false;
@@ -68,6 +79,7 @@ export class GameEngine {
   private lastTime = 0;
   private paused = false;
   private readonly jumpMemory = new WeakMap<PhysicsBody, JumpMemory>();
+  private readonly dashMemory = new WeakMap<PhysicsBody, DashMemory>();
   private readonly onUpdate?: GameEngineOptions['onUpdate'];
   private readonly onRender?: GameEngineOptions['onRender'];
   private readonly onPauseChange?: GameEngineOptions['onPauseChange'];
@@ -77,9 +89,12 @@ export class GameEngine {
     down: false,
     left: false,
     right: false,
+    jump: false,
+    dash: false,
     action: false,
     pause: false,
   };
+  private frameDt = 0;
 
   constructor(options: GameEngineOptions) {
     const ctx = options.canvas.getContext('2d');
@@ -91,6 +106,7 @@ export class GameEngine {
     this.ctx = ctx;
     this.ctx.imageSmoothingEnabled = false;
     this.input = new InputManager();
+    this.controls = this.input.getControls();
     this.difficulty = { ...KIDS_DIFFICULTY, ...options.difficulty };
     this.onUpdate = options.onUpdate;
     this.onRender = options.onRender;
@@ -137,6 +153,7 @@ export class GameEngine {
     const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
     const dt = Math.min(rawDt, this.difficulty.maxDelta);
+    this.frameDt = dt;
 
     this.handleInput();
     if (!this.paused) {
@@ -147,9 +164,9 @@ export class GameEngine {
     this.rafId = requestAnimationFrame(this.tick);
   };
 
-  /** Read keyboard / virtual controls for this frame. */
+  /** Read Arrow/WASD, Space jump, Shift dash — smooth buffered polling. */
   handleInput(): void {
-    this.currentInput = this.input.getState();
+    this.currentInput = this.controls.poll(this.frameDt);
 
     if (this.currentInput.pause) {
       this.setPaused(!this.paused);
@@ -171,12 +188,11 @@ export class GameEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Physics — gravity, jump arc, horizontal movement (kid-tuned)
+  // Physics — gravity, jump arc, horizontal move, safe dash
   // ---------------------------------------------------------------------------
 
   /**
-   * Apply horizontal run + forgiving jump arc to a body.
-   * Use for the player in side-scrolling / platform levels.
+   * Apply horizontal run + forgiving jump + short dash to a body.
    */
   applyPlayerPhysics(
     body: PhysicsBody,
@@ -184,21 +200,37 @@ export class GameEngine {
     solids: Rect[] = [],
     dt: number,
   ): void {
-    this.applyHorizontalMovement(body, input, dt);
+    this.tickDashTimers(body, dt);
+
+    if (this.isDashing(body)) {
+      this.applyDashMotion(body);
+    } else {
+      this.applyHorizontalMovement(body, input, dt);
+      this.tryStartDash(body, input);
+      if (this.isDashing(body)) {
+        this.applyDashMotion(body);
+      }
+    }
+
     this.applyJumpArc(body, input, dt);
     this.applyGravity(body, dt);
     integrate(body, dt);
     collideWithWorld(body, solids);
     this.refreshCoyote(body);
+
+    if (body.grounded) {
+      const dash = this.getDashMemory(body);
+      dash.airUsed = false;
+    }
   }
 
-  /** Left/right movement with soft ground friction and strong air control. */
+  /** Left/right movement with acceleration for smoother feel. */
   applyHorizontalMovement(
     body: PhysicsBody,
     input: InputState,
-    _dt: number,
+    dt: number,
   ): void {
-    const { moveSpeed, airControl, groundFriction } = this.difficulty;
+    const { moveSpeed, moveAccel, airControl, groundFriction } = this.difficulty;
     const control = body.grounded ? 1 : airControl;
 
     let axis = 0;
@@ -206,7 +238,14 @@ export class GameEngine {
     if (input.right) axis += 1;
 
     if (axis !== 0) {
-      body.velocity.x = axis * moveSpeed * control;
+      const target = axis * moveSpeed * control;
+      const maxStep = moveAccel * dt;
+      const delta = target - body.velocity.x;
+      if (Math.abs(delta) <= maxStep) {
+        body.velocity.x = target;
+      } else {
+        body.velocity.x += Math.sign(delta) * maxStep;
+      }
       return;
     }
 
@@ -219,13 +258,12 @@ export class GameEngine {
   }
 
   /**
-   * Forgiving jump: coyote time + input buffer + variable jump height.
-   * Holding jump longer makes a higher arc; releasing cuts the jump short.
+   * Forgiving jump: coyote time + Controls jump buffer + variable height.
+   * Jump = Space (Up / W also accepted).
    */
   applyJumpArc(body: PhysicsBody, input: InputState, dt: number): void {
     const memory = this.getJumpMemory(body);
-    const { jumpForce, coyoteTime, jumpBuffer, jumpCutMultiplier } =
-      this.difficulty;
+    const { jumpForce, coyoteTime, jumpCutMultiplier } = this.difficulty;
 
     if (body.grounded) {
       memory.coyoteTimer = coyoteTime;
@@ -233,24 +271,18 @@ export class GameEngine {
       memory.coyoteTimer = Math.max(0, memory.coyoteTimer - dt);
     }
 
-    if (input.up) {
-      memory.bufferTimer = jumpBuffer;
-    } else {
-      memory.bufferTimer = Math.max(0, memory.bufferTimer - dt);
-    }
-
     const canJump = memory.coyoteTimer > 0;
-    const wantsJump = memory.bufferTimer > 0;
+    const wantsJump = input.jump;
 
-    if (canJump && wantsJump) {
+    if (canJump && wantsJump && !this.isDashing(body)) {
       body.velocity.y = -jumpForce;
       body.grounded = false;
       memory.coyoteTimer = 0;
-      memory.bufferTimer = 0;
       memory.jumpHeld = true;
+      this.controls.consumeJumpBuffer();
     }
 
-    // Variable jump arc: release early → shorter hop (easier to control landings)
+    // Variable jump: release Space early → shorter hop
     if (memory.jumpHeld && !input.up && body.velocity.y < 0) {
       body.velocity.y *= jumpCutMultiplier;
       memory.jumpHeld = false;
@@ -261,14 +293,51 @@ export class GameEngine {
     }
   }
 
-  /** Soft gravity with a gentle terminal velocity. */
+  /** Soft gravity with a gentle terminal velocity (skipped mid-dash). */
   applyGravity(body: PhysicsBody, dt: number): void {
-    if (body.grounded) return;
+    if (body.grounded || this.isDashing(body)) return;
     const { gravity, maxFallSpeed } = this.difficulty;
     body.velocity.y = Math.min(
       body.velocity.y + gravity * dt,
       maxFallSpeed,
     );
+  }
+
+  /** Whether the body is in the short kid-safe dash window. */
+  isDashing(body: PhysicsBody): boolean {
+    return this.getDashMemory(body).timer > 0;
+  }
+
+  private tryStartDash(body: PhysicsBody, input: InputState): void {
+    const dash = this.getDashMemory(body);
+    if (!input.dash || dash.timer > 0 || dash.cooldown > 0) return;
+    if (!body.grounded && (!DASH_CONFIG.allowAirDash || dash.airUsed)) return;
+
+    let direction: 1 | -1 = 1;
+    if (input.left && !input.right) direction = -1;
+    else if (input.right && !input.left) direction = 1;
+    else if (body.velocity.x < 0) direction = -1;
+
+    dash.timer = DASH_CONFIG.duration;
+    dash.cooldown = DASH_CONFIG.cooldown;
+    dash.direction = direction;
+    if (!body.grounded) dash.airUsed = true;
+    this.controls.consumeDashBuffer();
+  }
+
+  private applyDashMotion(body: PhysicsBody): void {
+    const dash = this.getDashMemory(body);
+    body.velocity.x = dash.direction * DASH_CONFIG.speed;
+    body.velocity.y *= DASH_CONFIG.airVerticalScale;
+  }
+
+  private tickDashTimers(body: PhysicsBody, dt: number): void {
+    const dash = this.getDashMemory(body);
+    if (dash.timer > 0) {
+      dash.timer = Math.max(0, dash.timer - dt);
+    } else if (dash.cooldown > 0) {
+      dash.cooldown = Math.max(0, dash.cooldown - dt);
+    }
   }
 
   /**
@@ -312,8 +381,17 @@ export class GameEngine {
   private getJumpMemory(body: PhysicsBody): JumpMemory {
     let memory = this.jumpMemory.get(body);
     if (!memory) {
-      memory = { coyoteTimer: 0, bufferTimer: 0, jumpHeld: false };
+      memory = { coyoteTimer: 0, jumpHeld: false };
       this.jumpMemory.set(body, memory);
+    }
+    return memory;
+  }
+
+  private getDashMemory(body: PhysicsBody): DashMemory {
+    let memory = this.dashMemory.get(body);
+    if (!memory) {
+      memory = { timer: 0, cooldown: 0, direction: 1, airUsed: false };
+      this.dashMemory.set(body, memory);
     }
     return memory;
   }

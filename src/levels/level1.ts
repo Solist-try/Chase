@@ -36,11 +36,11 @@ export const level1: LevelConfig = {
       dialogue: [
         {
           speaker: 'Pip',
-          text: 'Hi Ember! Use the arrows or WASD to fly around.',
+          text: 'Hi Ember! Arrows or WASD to run, Space to jump!',
         },
         {
           speaker: 'Pip',
-          text: 'Grab the shiny stars — then we can explore further!',
+          text: 'Hold Shift for a short dash — then grab those shiny stars!',
         },
       ],
       patrol: { minX: 380, maxX: 560, speed: 50 },

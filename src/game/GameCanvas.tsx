@@ -174,7 +174,7 @@ export function GameCanvas({ levelId, onQuit, onLevelChange }: GameCanvasProps) 
         levelState={levelState}
         nearbyHint={
           nearbyName && !dialogue
-            ? `Near ${nearbyName} — press E / Space to talk`
+            ? `Near ${nearbyName} — press E to talk`
             : null
         }
       />

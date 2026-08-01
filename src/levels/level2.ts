@@ -57,7 +57,7 @@ export const level2: LevelConfig = {
       dialogue: [
         {
           speaker: 'Pip',
-          text: 'I came along! Press E or Space near friends to talk.',
+          text: 'I came along! Press E near friends to talk.',
         },
       ],
     },

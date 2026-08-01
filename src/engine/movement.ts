@@ -67,7 +67,7 @@ export function applyMovement(
   }
   body.velocity.x = vx * speed * control;
 
-  if (input.up && body.grounded) {
+  if ((input.jump || input.up) && body.grounded) {
     body.velocity.y = -jumpForce;
     body.grounded = false;
   }

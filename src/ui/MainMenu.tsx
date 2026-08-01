@@ -25,7 +25,9 @@ export function MainMenu({ onStart, onSelectLevel }: MainMenuProps) {
           Choose Level
         </Button>
       </div>
-      <p className="menu-hint">Move with arrows / WASD · Talk with E or Space</p>
+      <p className="menu-hint">
+        Arrows / WASD move · Space jump · Shift dash · E talk
+      </p>
     </div>
   );
 }
