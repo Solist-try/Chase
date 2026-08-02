@@ -5,6 +5,7 @@
 
 import { WalkerEnemy } from './WalkerEnemy.js';
 import { HopperEnemy } from './HopperEnemy.js';
+import { FloaterEnemy } from './FloaterEnemy.js';
 
 export class Level1 {
   constructor(canvas) {
@@ -24,11 +25,12 @@ export class Level1 {
       { x: 480, y: canvas.height - 190 },
     ];
 
-    // Cute walker + hopper enemies
+    // Cute walker, hopper, and floater enemies
     this.enemies = [
       new WalkerEnemy(200, canvas.height - 75),
       new WalkerEnemy(420, canvas.height - 195),
       new HopperEnemy(320, canvas.height - 235),
+      new FloaterEnemy(500, canvas.height - 250),
     ];
 
     // Where the dragon begins (used if a screen prefers level spawn)
