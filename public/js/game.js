@@ -1,6 +1,7 @@
 import { GameEngine } from './GameEngine.js';
 import { Dragon } from './Dragon.js';
 import { Level1 } from './levels/Level1.js';
+import { controls, startControls, stopControls } from './controls.js';
 
 const pauseBtn = document.getElementById('pauseBtn');
 if (pauseBtn) {
@@ -11,6 +12,7 @@ const loadingScreen = document.getElementById('loadingScreen');
 const gameHud = document.getElementById('gameHud');
 const gameStage = document.getElementById('gameStage');
 const levelName = document.getElementById('levelName');
+const canvas = document.getElementById('gameCanvas');
 
 const currentLevel = Level1;
 
@@ -18,20 +20,11 @@ if (levelName && currentLevel.name) {
   levelName.textContent = currentLevel.name;
 }
 
-const dragon = new Dragon({
-  x: currentLevel.startPosition.x,
-  y: currentLevel.startPosition.y,
-  groundY: currentLevel.groundY,
-});
-
 function showGameUi() {
-  // Hide the loading screen when assets are ready.
   if (loadingScreen) {
     loadingScreen.classList.add('is-hidden');
     loadingScreen.hidden = true;
   }
-
-  // Then show the canvas and HUD.
   if (gameHud) {
     gameHud.classList.remove('is-hidden');
     gameHud.hidden = false;
@@ -42,23 +35,37 @@ function showGameUi() {
   }
 }
 
-const engine = new GameEngine();
-
-// Safety net: if anything goes wrong, still leave the loading screen.
-const readyFallback = window.setTimeout(showGameUi, 1200);
-
-engine
-  .start(dragon, currentLevel, () => {
-    window.clearTimeout(readyFallback);
+function startGame() {
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    console.error('Game canvas (#gameCanvas) not found');
     showGameUi();
-  })
-  .catch((error) => {
-    console.error('Failed to start game:', error);
-    window.clearTimeout(readyFallback);
-    showGameUi();
+    return;
+  }
+
+  canvas.width = 960;
+  canvas.height = 540;
+
+  const dragon = new Dragon({
+    x: currentLevel.startPosition.x,
+    y: currentLevel.startPosition.y,
+    color: '#2bb673',
   });
 
-// Debug/help hooks + router cleanup.
-window.__dragon = dragon;
-window.__engine = engine;
-window.__stopAdventure = () => engine.stop();
+  startControls();
+
+  const engine = new GameEngine(canvas, currentLevel, dragon, controls);
+
+  // Hide loading, show canvas + HUD, then run the loop.
+  showGameUi();
+  engine.start();
+
+  window.__dragon = dragon;
+  window.__engine = engine;
+  window.__stopAdventure = () => {
+    engine.pause();
+    stopControls();
+  };
+}
+
+// Brief loading moment, then start (never hang forever).
+window.setTimeout(startGame, 250);

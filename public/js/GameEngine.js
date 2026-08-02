@@ -1,330 +1,185 @@
-/**
- * Tiny game engine — runs the core update/render loop every frame.
- */
-
-import {
-  startControls,
-  stopControls,
-  isLeftPressed,
-  isRightPressed,
-  consumeJump,
-} from './controls.js';
-
-/** @type {HTMLCanvasElement | null} */
-let canvas = null;
-/** @type {CanvasRenderingContext2D | null} */
-let ctx = null;
-
-function bindCanvas() {
-  const el = document.getElementById('gameCanvas');
-  if (!(el instanceof HTMLCanvasElement)) {
-    throw new Error('Game canvas (#gameCanvas) not found');
-  }
-
-  canvas = el;
-  canvas.width = 960;
-  canvas.height = 540;
-  ctx = canvas.getContext('2d');
-
-  // Store ctx globally so screens/helpers can draw with it.
-  globalThis.ctx = ctx;
-  globalThis.canvas = canvas;
-
-  return { canvas, ctx };
-}
-
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((resolve) => setTimeout(resolve, ms)),
-  ]);
-}
+// ---------------------------------------------------------
+// Dragon Adventure – Simple Game Engine
+// Clean, readable, kid-friendly logic
+// ---------------------------------------------------------
 
 export class GameEngine {
-  constructor() {
-    this.canvas = null;
-    this.ctx = null;
-    this.dragon = null;
-    this.level = null;
-    this.platforms = [];
-    this.groundY = 468;
+  constructor(canvas, level, dragon, controls) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
 
-    this._running = false;
-    this._rafId = 0;
-    this._lastTime = 0;
-  }
-
-  /**
-   * Begin the game with a dragon and level.
-   * Calls onReady when assets are prepared, then starts the loop.
-   * @param {import('./Dragon.js').Dragon} dragon
-   * @param {object} level
-   * @param {() => void} [onReady] - fired when assets are ready
-   */
-  async start(dragon, level, onReady) {
-    if (this._running) return;
-
-    this.dragon = dragon;
     this.level = level;
-    this.platforms = level?.platforms ?? [];
-    this.groundY = level?.groundY ?? 468;
+    this.dragon = dragon;
+    this.controls = controls;
 
-    if (dragon) {
-      dragon.groundY = this.groundY;
-    }
+    this.lastTime = 0;
+    this.gravity = 0.4; // gentle gravity for kids
+    this.groundLevel = canvas.height - 50;
 
-    try {
-      await this.loadAssets(level);
-
-      const bound = bindCanvas();
-      this.canvas = bound.canvas;
-      this.ctx = bound.ctx;
-      this.groundY = level?.groundY ?? this.canvas.height - 72;
-      if (dragon) dragon.groundY = this.groundY;
-    } catch (error) {
-      console.error('GameEngine.start failed while loading:', error);
-    } finally {
-      // Never leave the player on an infinite loading screen.
-      if (typeof onReady === 'function') {
-        try {
-          onReady();
-        } catch (readyError) {
-          console.error('onReady callback failed:', readyError);
-        }
-      }
-    }
-
-    if (!this.canvas || !this.ctx) {
-      try {
-        const bound = bindCanvas();
-        this.canvas = bound.canvas;
-        this.ctx = bound.ctx;
-      } catch (error) {
-        console.error('Could not bind game canvas:', error);
-        return;
-      }
-    }
-
-    this._running = true;
-    startControls();
-    this._lastTime = performance.now();
-    this._rafId = requestAnimationFrame((time) => this.loop(time));
+    this.running = false;
+    this._jumpLocked = false;
   }
 
-  /**
-   * Prepare level / font assets before gameplay begins.
-   * Always resolves within a short timeout so loading cannot hang.
-   * @param {object} [level]
-   */
-  async loadAssets(level) {
-    const jobs = [];
-
-    // Fonts can hang if a remote stylesheet never finishes — cap the wait.
-    if (document.fonts?.ready) {
-      jobs.push(withTimeout(document.fonts.ready, 600));
-    }
-
-    const assetUrls = level?.assets ?? [];
-    for (const url of assetUrls) {
-      jobs.push(
-        withTimeout(
-          new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-            img.src = url;
-          }),
-          600,
-        ),
-      );
-    }
-
-    // Brief pause so the loading screen can paint once.
-    jobs.push(new Promise((resolve) => setTimeout(resolve, 200)));
-
-    await withTimeout(Promise.all(jobs), 900);
+  start() {
+    if (this.running) return;
+    this.running = true;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
   }
 
-  /** Stop the animation loop. */
-  stop() {
-    this._running = false;
-    if (this._rafId) {
-      cancelAnimationFrame(this._rafId);
-      this._rafId = 0;
-    }
-    stopControls();
-  }
+  loop(timestamp) {
+    if (!this.running) return;
 
-  /**
-   * One frame: clear → update → render → schedule next frame.
-   * @param {number} time
-   */
-  loop(time) {
-    if (!this._running || !ctx || !canvas) return;
+    const delta = timestamp - this.lastTime;
+    this.lastTime = timestamp;
 
-    const dt = Math.min(0.05, (time - this._lastTime) / 1000);
-    this._lastTime = time;
-
-    // Clear the canvas each frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    this.update(dt);
+    this.update(delta);
     this.render();
 
-    this._rafId = requestAnimationFrame((nextTime) => this.loop(nextTime));
+    requestAnimationFrame((t) => this.loop(t));
   }
 
-  /**
-   * Update game state for this frame.
-   * Reads controls, moves the dragon, then resolves platform collisions.
-   * @param {number} dt - Seconds since last frame
-   */
-  update(dt) {
-    const dragon = this.dragon;
-    if (!dragon || !canvas) return;
+  update(delta) {
+    // ---------------------------
+    // Apply gravity
+    // ---------------------------
+    this.dragon.velocityY += this.gravity;
 
-    // Left / right movement
-    dragon.vx = 0;
-
-    if (isLeftPressed()) {
-      dragon.vx = -dragon.speed;
-      dragon.facing = -1;
-    }
-    if (isRightPressed()) {
-      dragon.vx = dragon.speed;
-      dragon.facing = 1;
+    // Soft fall-speed cap so long drops stay gentle
+    if (this.dragon.velocityY > 12) {
+      this.dragon.velocityY = 12;
     }
 
-    // Jump on keydown tap (queued) while grounded — no double jumps.
-    if (consumeJump()) {
-      dragon.jump();
+    // ---------------------------
+    // Horizontal movement
+    // ---------------------------
+    if (this.controls.left) this.dragon.x -= this.dragon.speed;
+    if (this.controls.right) this.dragon.x += this.dragon.speed;
+
+    // Keep the dragon on the screen
+    if (this.dragon.x < 0) this.dragon.x = 0;
+    if (this.dragon.x + this.dragon.width > this.canvas.width) {
+      this.dragon.x = this.canvas.width - this.dragon.width;
     }
 
-    const prevBottom = dragon.y + dragon.radius * 0.9;
+    // ---------------------------
+    // Jump (only when grounded — no double jumps)
+    // ---------------------------
+    if (this.controls.jump && this.dragon.onGround && !this._jumpLocked) {
+      this.dragon.velocityY = -10; // gentle jump
+      this.dragon.onGround = false;
+      this._jumpLocked = true;
+    }
+    if (!this.controls.jump) {
+      this._jumpLocked = false;
+    }
 
-    dragon.update(dt, {
-      width: canvas.width,
-      groundY: this.groundY,
+    // ---------------------------
+    // Apply vertical movement
+    // ---------------------------
+    this.dragon.y += this.dragon.velocityY;
+
+    // ---------------------------
+    // Ground collision
+    // ---------------------------
+    if (this.dragon.y >= this.groundLevel) {
+      this.dragon.y = this.groundLevel;
+      this.dragon.velocityY = 0;
+      this.dragon.onGround = true;
+    }
+
+    // ---------------------------
+    // Platform collisions
+    // ---------------------------
+    this.level.platforms.forEach((p) => {
+      if (
+        this.dragon.x < p.x + p.width &&
+        this.dragon.x + this.dragon.width > p.x &&
+        this.dragon.y + this.dragon.height > p.y &&
+        this.dragon.y + this.dragon.height < p.y + p.height
+      ) {
+        // Land on platform
+        this.dragon.y = p.y - this.dragon.height;
+        this.dragon.velocityY = 0;
+        this.dragon.onGround = true;
+      }
     });
 
-    // Land on / collide with platforms every frame.
-    this.resolvePlatformCollisions(dragon, prevBottom);
+    // Used by the loop timing; keeps the signature kid-friendly.
+    void delta;
   }
 
-  /**
-   * Resolve dragon vs platform overlaps (land on top, bump sides/ceiling).
-   * @param {import('./Dragon.js').Dragon} dragon
-   * @param {number} prevBottom
-   */
-  resolvePlatformCollisions(dragon, prevBottom) {
-    const halfW = dragon.radius * 1.05;
-    const halfH = dragon.radius * 0.9;
-
-    for (const platform of this.platforms) {
-      const left = dragon.x - halfW;
-      const right = dragon.x + halfW;
-      const top = dragon.y - halfH;
-      const bottom = dragon.y + halfH;
-
-      const overlaps =
-        right > platform.left &&
-        left < platform.right &&
-        bottom > platform.top &&
-        top < platform.bottom;
-
-      if (!overlaps) continue;
-
-      const overlapLeft = right - platform.left;
-      const overlapRight = platform.right - left;
-      const overlapTop = bottom - platform.top;
-      const overlapBottom = platform.bottom - top;
-      const minOverlap = Math.min(
-        overlapLeft,
-        overlapRight,
-        overlapTop,
-        overlapBottom,
-      );
-
-      // Landing on top while falling.
-      const wasAbove = prevBottom <= platform.top + 6;
-      if (
-        (wasAbove && dragon.vy >= 0) ||
-        (minOverlap === overlapTop && dragon.vy >= 0)
-      ) {
-        dragon.y = platform.top - halfH;
-        dragon.vy = 0;
-        dragon.onGround = true;
-        continue;
-      }
-
-      // Hit underside while jumping up.
-      if (minOverlap === overlapBottom && dragon.vy < 0) {
-        dragon.y = platform.bottom + halfH;
-        dragon.vy = 0;
-        continue;
-      }
-
-      // Side bumps.
-      if (minOverlap === overlapLeft) {
-        dragon.x = platform.left - halfW;
-        dragon.vx = 0;
-      } else if (minOverlap === overlapRight) {
-        dragon.x = platform.right + halfW;
-        dragon.vx = 0;
-      }
-    }
-  }
-
-  /** Draw the current frame from the active level. */
   render() {
-    if (!ctx || !canvas || !this.level || !this.dragon) return;
+    // Clear screen
+    this.ctx.fillStyle = this.level.background;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.drawLevelBackground();
+    // Soft ground strip
+    this.ctx.fillStyle = this.level.groundColor || '#5ecf6e';
+    this.ctx.fillRect(0, this.groundLevel + this.dragon.height, this.canvas.width, this.canvas.height);
 
-    for (const platform of this.platforms) {
-      platform.draw(ctx);
-    }
+    // Draw platforms
+    this.ctx.fillStyle = '#8ED6FF';
+    this.level.platforms.forEach((p) => {
+      this.ctx.fillStyle = p.color || '#8ED6FF';
+      this.ctx.fillRect(p.x, p.y, p.width, p.height);
+    });
 
-    this.dragon.draw(ctx);
+    // Draw dragon
+    this.ctx.fillStyle = this.dragon.color;
+    this.ctx.fillRect(
+      this.dragon.x,
+      this.dragon.y,
+      this.dragon.width,
+      this.dragon.height,
+    );
+
+    // Friendly eye so the rectangle still feels like a dragon
+    this.ctx.fillStyle = '#fff';
+    this.ctx.beginPath();
+    this.ctx.arc(
+      this.dragon.x + this.dragon.width * 0.7,
+      this.dragon.y + this.dragon.height * 0.35,
+      6,
+      0,
+      Math.PI * 2,
+    );
+    this.ctx.fill();
+    this.ctx.fillStyle = '#1b2a4a';
+    this.ctx.beginPath();
+    this.ctx.arc(
+      this.dragon.x + this.dragon.width * 0.75,
+      this.dragon.y + this.dragon.height * 0.35,
+      3,
+      0,
+      Math.PI * 2,
+    );
+    this.ctx.fill();
+
+    // Draw collectibles (optional)
+    (this.level.collectibles || []).forEach((c) => {
+      this.ctx.fillStyle = 'yellow';
+      this.ctx.beginPath();
+      this.ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
+      this.ctx.fill();
+    });
   }
 
-  drawLevelBackground() {
-    if (!ctx || !canvas || !this.level) return;
+  pause() {
+    this.running = false;
+  }
 
-    const width = canvas.width;
-    const height = canvas.height;
-    const level = this.level;
-    const groundY = this.groundY;
-    const bg = level.backgroundColor || '#7ec8ff';
+  resume() {
+    if (this.running) return;
+    this.running = true;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
+  }
 
-    const sky = ctx.createLinearGradient(0, 0, 0, height);
-    sky.addColorStop(0, bg);
-    sky.addColorStop(0.55, '#b8f0ff');
-    sky.addColorStop(1, '#fff6b0');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.fillStyle = level.hillColor || '#7adf8a';
-    ctx.beginPath();
-    ctx.moveTo(0, groundY - 20);
-    ctx.quadraticCurveTo(width * 0.25, groundY - 90, width * 0.5, groundY - 30);
-    ctx.quadraticCurveTo(width * 0.75, groundY + 20, width, groundY - 50);
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = level.groundColor || '#5ecf6e';
-    ctx.fillRect(0, groundY, width, height - groundY);
-    ctx.fillStyle = level.groundTopColor || '#f4d35e';
-    ctx.fillRect(0, groundY, width, 10);
-
-    ctx.fillStyle = '#ffe566';
-    ctx.beginPath();
-    ctx.arc(width - 90, 70, 40, 0, Math.PI * 2);
-    ctx.fill();
+  /** Alias used by the router when leaving the game screen. */
+  stop() {
+    this.pause();
   }
 }
 
-export { bindCanvas };
 export default GameEngine;
