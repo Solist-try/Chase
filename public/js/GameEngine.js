@@ -153,7 +153,7 @@ export class GameEngine {
       this.ctx.fill();
     });
 
-    // Draw enemies
+    // Draw all enemy types
     this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
     // Draw dragon (eyes + smile live in Dragon.draw)
