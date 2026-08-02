@@ -117,19 +117,24 @@ export class GameEngine {
     // Cute two-frame bob animation
     this.dragon.updateAnimation(delta);
 
-    // ---------------------------
-    // Enemies (slow patrol)
-    // ---------------------------
-    (this.level.enemies || []).forEach((enemy) => {
-      enemy.update();
+    // Update enemies
+    this.level.enemies.forEach((enemy) => enemy.update());
 
-      // Soft bump — nudge the dragon back a little (never scary)
-      if (this.#overlaps(this.dragon, enemy)) {
-        this.dragon.x += enemy.direction > 0 ? -8 : 8;
+    // Dragon hits enemy → bounce back (non-harmful)
+    this.level.enemies.forEach((enemy) => {
+      if (
+        this.dragon.x < enemy.x + enemy.width &&
+        this.dragon.x + this.dragon.width > enemy.x &&
+        this.dragon.y < enemy.y + enemy.height &&
+        this.dragon.y + this.dragon.height > enemy.y
+      ) {
+        // Bounce dragon back gently
+        this.dragon.x -= 20 * this.dragon.speed;
+        this.dragon.velocityY = -6; // small hop
+        this.dragon.onGround = false;
+
+        // Keep the dragon on the screen after the bounce
         if (this.dragon.x < 0) this.dragon.x = 0;
-        if (this.dragon.x + this.dragon.width > this.canvas.width) {
-          this.dragon.x = this.canvas.width - this.dragon.width;
-        }
       }
     });
   }
@@ -154,21 +159,10 @@ export class GameEngine {
     });
 
     // Draw enemies
-    (this.level.enemies || []).forEach((enemy) => {
-      enemy.draw(this.ctx);
-    });
+    this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
     // Draw dragon (eyes + smile live in Dragon.draw)
     this.dragon.draw(this.ctx);
-  }
-
-  #overlaps(a, b) {
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    );
   }
 
   /** Turn level.background into a canvas fill style. */
