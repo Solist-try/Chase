@@ -105,8 +105,8 @@ export class GameEngine {
       }
     });
 
-    // Used by the loop timing; keeps the signature kid-friendly.
-    void delta;
+    // Cute two-frame bob animation
+    this.dragon.updateAnimation(delta);
   }
 
   render() {
@@ -116,45 +116,21 @@ export class GameEngine {
 
     // Soft ground strip
     this.ctx.fillStyle = this.level.groundColor || '#5ecf6e';
-    this.ctx.fillRect(0, this.groundLevel + this.dragon.height, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(
+      0,
+      this.groundLevel + this.dragon.height,
+      this.canvas.width,
+      this.canvas.height,
+    );
 
     // Draw platforms
-    this.ctx.fillStyle = '#8ED6FF';
     this.level.platforms.forEach((p) => {
       this.ctx.fillStyle = p.color || '#8ED6FF';
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
     });
 
-    // Draw dragon
-    this.ctx.fillStyle = this.dragon.color;
-    this.ctx.fillRect(
-      this.dragon.x,
-      this.dragon.y,
-      this.dragon.width,
-      this.dragon.height,
-    );
-
-    // Friendly eye so the rectangle still feels like a dragon
-    this.ctx.fillStyle = '#fff';
-    this.ctx.beginPath();
-    this.ctx.arc(
-      this.dragon.x + this.dragon.width * 0.7,
-      this.dragon.y + this.dragon.height * 0.35,
-      6,
-      0,
-      Math.PI * 2,
-    );
-    this.ctx.fill();
-    this.ctx.fillStyle = '#1b2a4a';
-    this.ctx.beginPath();
-    this.ctx.arc(
-      this.dragon.x + this.dragon.width * 0.75,
-      this.dragon.y + this.dragon.height * 0.35,
-      3,
-      0,
-      Math.PI * 2,
-    );
-    this.ctx.fill();
+    // Draw dragon (eyes + smile live in Dragon.draw)
+    this.dragon.draw(this.ctx);
 
     // Draw collectibles (optional)
     (this.level.collectibles || []).forEach((c) => {

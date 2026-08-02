@@ -45,11 +45,10 @@ function startGame() {
   canvas.width = 960;
   canvas.height = 540;
 
-  const dragon = new Dragon({
-    x: currentLevel.startPosition.x,
-    y: currentLevel.startPosition.y,
-    color: '#2bb673',
-  });
+  const dragon = new Dragon(
+    currentLevel.startPosition.x,
+    currentLevel.startPosition.y,
+  );
 
   startControls();
 

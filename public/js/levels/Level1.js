@@ -12,7 +12,7 @@ export const Level1 = {
   /** Where the dragon starts. */
   startPosition: {
     x: 120,
-    y: 400,
+    y: 420,
   },
 
   /** Platforms the dragon can stand on. */
