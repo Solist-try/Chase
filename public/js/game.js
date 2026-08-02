@@ -5,42 +5,47 @@
     pauseBtn.onclick = () => navigateTo('pause');
   }
 
-  const { GameEngine, canvas, ctx } = await import('/js/GameEngine.js');
+  const [{ GameEngine, canvas, ctx }, { Dragon }] = await Promise.all([
+    import('/js/GameEngine.js'),
+    import('/js/Dragon.js'),
+  ]);
 
-  // Simple kid-friendly scene state driven by the engine loop.
-  const world = {
-    width: canvas.width,
-    height: canvas.height,
-    groundY: canvas.height - 72,
-    dragon: {
-      x: 120,
-      y: canvas.height - 140,
-      vx: 160,
-      vy: 0,
-      radius: 36,
-      facing: 1,
-    },
-    hopTimer: 0,
+  const groundY = canvas.height - 72;
+  const dragon = new Dragon({
+    x: 140,
+    y: groundY - 80,
+    groundY,
+  });
+
+  const keys = {
+    left: false,
+    right: false,
+    jump: false,
   };
 
-  function update(dt) {
-    const dragon = world.dragon;
-    dragon.x += dragon.vx * dt;
-
-    // Bounce off the sides of the meadow.
-    if (dragon.x < 60 || dragon.x > world.width - 60) {
-      dragon.vx *= -1;
-      dragon.facing = Math.sign(dragon.vx) || dragon.facing;
-      dragon.x = Math.max(60, Math.min(world.width - 60, dragon.x));
+  function onKeyDown(event) {
+    const key = event.key.toLowerCase();
+    if (key === 'arrowleft' || key === 'a') keys.left = true;
+    if (key === 'arrowright' || key === 'd') keys.right = true;
+    if (key === ' ' || key === 'arrowup' || key === 'w') {
+      keys.jump = true;
+      event.preventDefault();
     }
-
-    // Gentle hop so the dragon feels alive.
-    world.hopTimer += dt;
-    dragon.y = world.groundY - 68 - Math.abs(Math.sin(world.hopTimer * 3)) * 18;
   }
 
-  function render() {
-    const { width, height, groundY, dragon } = world;
+  function onKeyUp(event) {
+    const key = event.key.toLowerCase();
+    if (key === 'arrowleft' || key === 'a') keys.left = false;
+    if (key === 'arrowright' || key === 'd') keys.right = false;
+    if (key === ' ' || key === 'arrowup' || key === 'w') keys.jump = false;
+  }
+
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+
+  function drawWorld() {
+    const width = canvas.width;
+    const height = canvas.height;
 
     // Sky
     const sky = ctx.createLinearGradient(0, 0, 0, height);
@@ -72,46 +77,27 @@
     ctx.beginPath();
     ctx.arc(width - 90, 70, 40, 0, Math.PI * 2);
     ctx.fill();
+  }
 
-    // Dragon body
-    ctx.save();
-    ctx.translate(dragon.x, dragon.y);
-    ctx.scale(dragon.facing, 1);
+  function update(dt) {
+    dragon.handleInput(keys);
+    dragon.update(dt, { width: canvas.width, groundY });
+    // Jump is edge-triggered so holding Space doesn't multi-jump.
+    keys.jump = false;
+  }
 
-    ctx.fillStyle = '#2bb673';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, dragon.radius * 1.15, dragon.radius * 0.9, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Head
-    ctx.beginPath();
-    ctx.ellipse(dragon.radius * 0.85, -12, 22, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Wing
-    ctx.fillStyle = '#ff6b6b';
-    ctx.beginPath();
-    ctx.moveTo(-8, -8);
-    ctx.quadraticCurveTo(-40, -50, -4, -34);
-    ctx.closePath();
-    ctx.fill();
-
-    // Eye
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(dragon.radius * 0.95, -16, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1b2a4a';
-    ctx.beginPath();
-    ctx.arc(dragon.radius * 0.98, -16, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+  function render() {
+    drawWorld();
+    dragon.draw(ctx);
   }
 
   const engine = new GameEngine({ update, render });
   engine.start();
 
   // Let the router stop the loop when leaving this screen.
-  window.__stopAdventure = () => engine.stop();
+  window.__stopAdventure = () => {
+    engine.stop();
+    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
+  };
 })();
