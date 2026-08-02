@@ -3,7 +3,7 @@
 // Bright, simple, kid-friendly level layout
 // ---------------------------------------------------------
 
-import { Enemy } from './Enemy.js';
+import { WalkerEnemy } from './WalkerEnemy.js';
 
 export class Level1 {
   constructor(canvas) {
@@ -23,10 +23,10 @@ export class Level1 {
       { x: 480, y: canvas.height - 190 },
     ];
 
-    // Add cute enemies
+    // Add cute walker enemies
     this.enemies = [
-      new Enemy(200, canvas.height - 75),
-      new Enemy(420, canvas.height - 195),
+      new WalkerEnemy(200, canvas.height - 75),
+      new WalkerEnemy(420, canvas.height - 195),
     ];
 
     // Where the dragon begins (used if a screen prefers level spawn)
