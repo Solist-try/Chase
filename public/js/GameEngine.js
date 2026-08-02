@@ -108,11 +108,10 @@ export class GameEngine {
         dragon.facing = 1;
       }
 
-      // Jump once per key press (no multi-jump while held).
+      // On jump key: if dragon is on ground → vy = -jumpForce (no double jumps).
       if (isJumpPressed()) {
-        if (!this._jumpLocked && dragon.onGround) {
-          dragon.vy = -dragon.jumpForce;
-          dragon.onGround = false;
+        if (!this._jumpLocked) {
+          dragon.jump();
         }
         this._jumpLocked = true;
       } else {

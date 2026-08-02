@@ -23,6 +23,8 @@ export class Dragon {
     this.speed = 260;
     this.jumpForce = 520;
     this.gravity = 1400;
+    /** Max downward speed (px/s) — stops too-fast falling. */
+    this.maxFallSpeed = 900;
 
     // Animation + facing
     this.facing = 1;
@@ -38,8 +40,21 @@ export class Dragon {
   }
 
   /**
+   * Jump if currently on the ground (no double jumps).
+   * @returns {boolean} true if the jump started
+   */
+  jump() {
+    // Prevent double jumps — only leave the ground once.
+    if (!this.onGround) return false;
+
+    this.vy = -this.jumpForce;
+    this.onGround = false;
+    return true;
+  }
+
+  /**
    * Apply physics for one frame.
-   * Velocity from controls is set in GameEngine.update().
+   * Horizontal velocity from controls is set in GameEngine.update().
    * @param {number} dt - Seconds since last frame
    * @param {{ width?: number, groundY?: number }} [world]
    */
@@ -47,8 +62,13 @@ export class Dragon {
     const groundY = world.groundY ?? this.groundY;
     const width = world.width ?? 960;
 
-    // Gravity
+    // Gravity: vy += gravity (scaled by dt for stable frame timing)
     this.vy += this.gravity * dt;
+
+    // Clamp fall speed to avoid too-fast falling
+    if (this.vy > this.maxFallSpeed) {
+      this.vy = this.maxFallSpeed;
+    }
 
     // Integrate position
     this.x += this.vx * dt;
