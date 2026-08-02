@@ -1,6 +1,6 @@
 import { GameEngine } from './GameEngine.js';
 import { Dragon } from './Dragon.js';
-import { Level1 } from './levels/Level1.js';
+import { Level1 } from './Level1.js';
 import { Controls } from './controls.js';
 
 const pauseBtn = document.getElementById('pauseBtn');
@@ -13,12 +13,6 @@ const gameHud = document.getElementById('gameHud');
 const gameStage = document.getElementById('gameStage');
 const levelName = document.getElementById('levelName');
 const canvas = document.getElementById('gameCanvas');
-
-const level = Level1;
-
-if (levelName && level.name) {
-  levelName.textContent = level.name;
-}
 
 function showGameUi() {
   if (loadingScreen) {
@@ -42,9 +36,14 @@ if (!(canvas instanceof HTMLCanvasElement)) {
   canvas.width = 960;
   canvas.height = 540;
 
-  const dragon = new Dragon(level.startPosition.x, level.startPosition.y);
+  const level = new Level1(canvas);
+  const dragon = new Dragon(level.startX, level.startY);
   const controls = new Controls();
   const engine = new GameEngine(canvas, level, dragon, controls);
+
+  if (levelName && level.name) {
+    levelName.textContent = level.name;
+  }
 
   showGameUi();
   engine.start();

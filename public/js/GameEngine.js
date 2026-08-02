@@ -14,7 +14,13 @@ export class GameEngine {
 
     this.lastTime = 0;
     this.gravity = 0.4; // gentle gravity for kids
-    this.groundLevel = canvas.height - 50;
+
+    // Prefer the full-width ground platform from the level when present.
+    const ground =
+      level.platforms.find((p) => p.width >= canvas.width) || level.platforms[0];
+    this.groundLevel = ground
+      ? ground.y - dragon.height
+      : canvas.height - dragon.height;
 
     this.running = false;
     this._jumpLocked = false;
@@ -113,20 +119,11 @@ export class GameEngine {
   }
 
   render() {
-    // Clear screen
-    this.ctx.fillStyle = this.level.background;
+    // Clear screen (supports solid colors or CSS-like linear-gradient strings)
+    this.ctx.fillStyle = this.#backgroundStyle();
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Soft ground strip
-    this.ctx.fillStyle = this.level.groundColor || '#5ecf6e';
-    this.ctx.fillRect(
-      0,
-      this.groundLevel + this.dragon.height,
-      this.canvas.width,
-      this.canvas.height,
-    );
-
-    // Draw platforms
+    // Draw platforms (including the ground strip from Level1)
     this.level.platforms.forEach((p) => {
       this.ctx.fillStyle = p.color || '#8ED6FF';
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -142,6 +139,28 @@ export class GameEngine {
       this.ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
       this.ctx.fill();
     });
+  }
+
+  /** Turn level.background into a canvas fill style. */
+  #backgroundStyle() {
+    const bg = this.level.background || '#7ec8ff';
+
+    if (typeof bg === 'string' && bg.includes('linear-gradient')) {
+      const colors = bg.match(/#[0-9a-fA-F]{3,8}/g) || ['#ff9a9e', '#fad0c4'];
+      const gradient = this.ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        this.canvas.height,
+      );
+      colors.forEach((color, index) => {
+        const stop = colors.length === 1 ? 0 : index / (colors.length - 1);
+        gradient.addColorStop(stop, color);
+      });
+      return gradient;
+    }
+
+    return bg;
   }
 
   pause() {
