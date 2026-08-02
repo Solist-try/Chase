@@ -14,10 +14,10 @@ const gameStage = document.getElementById('gameStage');
 const levelName = document.getElementById('levelName');
 const canvas = document.getElementById('gameCanvas');
 
-const currentLevel = Level1;
+const level = Level1;
 
-if (levelName && currentLevel.name) {
-  levelName.textContent = currentLevel.name;
+if (levelName && level.name) {
+  levelName.textContent = level.name;
 }
 
 function showGameUi() {
@@ -35,35 +35,23 @@ function showGameUi() {
   }
 }
 
-function startGame() {
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    console.error('Game canvas (#gameCanvas) not found');
-    showGameUi();
-    return;
-  }
-
+// Make sure the canvas exists, then boot the game.
+if (!(canvas instanceof HTMLCanvasElement)) {
+  console.error('Game canvas (#gameCanvas) not found');
+} else {
   canvas.width = 960;
   canvas.height = 540;
 
-  const dragon = new Dragon(
-    currentLevel.startPosition.x,
-    currentLevel.startPosition.y,
-  );
-
+  const dragon = new Dragon(level.startPosition.x, level.startPosition.y);
   const controls = new Controls();
-  const engine = new GameEngine(canvas, currentLevel, dragon, controls);
+  const engine = new GameEngine(canvas, level, dragon, controls);
 
-  // Hide loading, show canvas + HUD, then run the loop.
   showGameUi();
   engine.start();
 
-  window.__dragon = dragon;
-  window.__engine = engine;
+  // Router cleanup when leaving this screen.
   window.__stopAdventure = () => {
     engine.pause();
     controls.dispose();
   };
 }
-
-// Brief loading moment, then start (never hang forever).
-window.setTimeout(startGame, 250);
