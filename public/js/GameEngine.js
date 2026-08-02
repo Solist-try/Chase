@@ -116,6 +116,22 @@ export class GameEngine {
 
     // Cute two-frame bob animation
     this.dragon.updateAnimation(delta);
+
+    // ---------------------------
+    // Enemies (slow patrol)
+    // ---------------------------
+    (this.level.enemies || []).forEach((enemy) => {
+      enemy.update();
+
+      // Soft bump — nudge the dragon back a little (never scary)
+      if (this.#overlaps(this.dragon, enemy)) {
+        this.dragon.x += enemy.direction > 0 ? -8 : 8;
+        if (this.dragon.x < 0) this.dragon.x = 0;
+        if (this.dragon.x + this.dragon.width > this.canvas.width) {
+          this.dragon.x = this.canvas.width - this.dragon.width;
+        }
+      }
+    });
   }
 
   render() {
@@ -129,9 +145,6 @@ export class GameEngine {
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
     });
 
-    // Draw dragon (eyes + smile live in Dragon.draw)
-    this.dragon.draw(this.ctx);
-
     // Draw collectibles (optional)
     (this.level.collectibles || []).forEach((c) => {
       this.ctx.fillStyle = 'yellow';
@@ -139,6 +152,23 @@ export class GameEngine {
       this.ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
       this.ctx.fill();
     });
+
+    // Draw enemies
+    (this.level.enemies || []).forEach((enemy) => {
+      enemy.draw(this.ctx);
+    });
+
+    // Draw dragon (eyes + smile live in Dragon.draw)
+    this.dragon.draw(this.ctx);
+  }
+
+  #overlaps(a, b) {
+    return (
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y
+    );
   }
 
   /** Turn level.background into a canvas fill style. */

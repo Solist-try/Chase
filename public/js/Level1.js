@@ -3,6 +3,8 @@
 // Bright, simple, kid-friendly level layout
 // ---------------------------------------------------------
 
+import { Enemy } from './Enemy.js';
+
 export class Level1 {
   constructor(canvas) {
     this.name = 'Level 1';
@@ -49,6 +51,12 @@ export class Level1 {
       { x: 100, y: canvas.height - 150 },
       { x: 300, y: canvas.height - 230 },
       { x: 480, y: canvas.height - 190 },
+    ];
+
+    // Cute, slow enemies patrolling the meadow
+    this.enemies = [
+      new Enemy(200, canvas.height - 75),
+      new Enemy(400, canvas.height - 75),
     ];
 
     // Where the dragon begins (standing on the ground)
