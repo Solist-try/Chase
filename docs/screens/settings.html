@@ -1,0 +1,52 @@
+<section class="page settings-page" aria-label="Settings">
+  <header class="settings-hero">
+    <p class="settings-kicker">Make it yours</p>
+    <h1 class="settings-title">Settings</h1>
+    <p class="settings-subtitle">Pick music, sounds, and your dragon's look.</p>
+  </header>
+
+  <form class="settings-form" id="settingsForm">
+    <fieldset class="settings-group">
+      <legend>Audio</legend>
+      <label class="toggle-row">
+        <span>Music</span>
+        <input id="musicToggle" type="checkbox" checked />
+      </label>
+      <label class="toggle-row">
+        <span>Sound Effects</span>
+        <input id="sfxToggle" type="checkbox" checked />
+      </label>
+    </fieldset>
+
+    <fieldset class="settings-group">
+      <legend>Dragon Color</legend>
+      <div class="color-options" role="radiogroup" aria-label="Dragon color">
+        <label class="color-option">
+          <input type="radio" name="dragonColor" value="emerald" checked />
+          <span class="swatch swatch-emerald" aria-hidden="true"></span>
+          <span>Emerald</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="dragonColor" value="sky" />
+          <span class="swatch swatch-sky" aria-hidden="true"></span>
+          <span>Sky</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="dragonColor" value="sunset" />
+          <span class="swatch swatch-sunset" aria-hidden="true"></span>
+          <span>Sunset</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="dragonColor" value="grape" />
+          <span class="swatch swatch-grape" aria-hidden="true"></span>
+          <span>Grape</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="settings-actions">
+      <button id="saveBtn" class="btn btn-primary" type="submit">Save</button>
+      <button id="backBtn" class="btn btn-secondary" type="button">Back</button>
+    </div>
+  </form>
+</section>
