@@ -31,6 +31,35 @@
     <canvas id="gameCanvas" class="game-canvas"></canvas>
   </div>
 
+  <!-- On-screen controls so phones/tablets can play without a keyboard -->
+  <div id="touchControls" class="touch-controls" hidden aria-label="Game controls">
+    <div class="touch-controls__move">
+      <button id="touchLeft" class="touch-btn touch-btn--move" type="button" aria-label="Move left">
+        ◀
+      </button>
+      <button id="touchRight" class="touch-btn touch-btn--move" type="button" aria-label="Move right">
+        ▶
+      </button>
+    </div>
+    <button id="touchJump" class="touch-btn touch-btn--jump" type="button" aria-label="Jump">
+      Jump
+    </button>
+  </div>
+
+  <!-- Shown when every star and coin is collected -->
+  <div id="winOverlay" class="win-menu" hidden>
+    <h2>You win!</h2>
+    <p>You collected every star and coin. Great job!</p>
+    <div class="win-menu__actions">
+      <button id="winAgainBtn" class="win-menu__btn win-menu__btn--again" type="button">
+        Play again
+      </button>
+      <button id="winHomeBtn" class="win-menu__btn win-menu__btn--home" type="button">
+        Home
+      </button>
+    </div>
+  </div>
+
   <!-- In-game pause (keeps the engine alive for Resume) -->
   <div id="pauseOverlay" class="pause-menu" hidden>
     <h2>Paused</h2>

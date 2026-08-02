@@ -74,11 +74,19 @@ async function loadRoute(routeName) {
   // 2) Run scripts declared in the screen HTML (e.g. game.js module).
   const ranScreenScripts = await runScriptsIn(app);
 
-  // 3) Fallback for screens that still use separate public/js/<route>.js files.
+  // 3) Fallback for screens that still use separate js/<route>.js files.
+  // Await load so buttons are wired before the player can tap them.
   if (!ranScreenScripts) {
-    const script = document.createElement('script');
-    script.src = `js/${routeName}.js?t=${Date.now()}`;
-    document.body.appendChild(script);
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `js/${routeName}.js?t=${Date.now()}`;
+      script.onload = resolve;
+      script.onerror = () =>
+        reject(new Error(`Failed to load route script: ${script.src}`));
+      document.body.appendChild(script);
+    }).catch((err) => {
+      console.error(err);
+    });
   }
 }
 

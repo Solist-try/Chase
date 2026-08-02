@@ -8,11 +8,23 @@
   </header>
 
   <div class="home-actions">
-    <button id="startBtn" class="btn btn-primary" type="button" onclick="startGame()">
+    <button
+      id="startBtn"
+      class="btn btn-primary"
+      type="button"
+      onclick="typeof startGame==='function'?startGame():navigateTo('story')"
+    >
       Start Game
     </button>
-    <button id="settingsBtn" class="btn btn-secondary" type="button">Settings</button>
+    <button
+      id="settingsBtn"
+      class="btn btn-secondary"
+      type="button"
+      onclick="navigateTo('settings')"
+    >
+      Settings
+    </button>
   </div>
 
-  <p class="home-hint">Tip: Use arrows or WASD to move. Space jumps!</p>
+  <p class="home-hint">Tip: Use the on-screen buttons, or arrows / WASD + Space.</p>
 </section>

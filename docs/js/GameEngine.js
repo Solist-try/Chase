@@ -24,6 +24,7 @@ export class GameEngine {
 
     this.running = false;
     this.won = false;
+    this.onWin = null;
     this._jumpLocked = false;
 
     this.starsCollected = 0;
@@ -94,7 +95,7 @@ export class GameEngine {
     // Jump (only when grounded — no double jumps)
     // ---------------------------
     if (this.controls.jump && this.dragon.onGround && !this._jumpLocked) {
-      this.dragon.velocityY = -10; // gentle jump
+      this.dragon.velocityY = -11; // gentle but high enough for Level 1 platforms
       this.dragon.onGround = false;
       this._jumpLocked = true;
     }
@@ -187,6 +188,9 @@ export class GameEngine {
       this.won = true;
       if (this.hud.levelGoal) {
         this.hud.levelGoal.textContent = 'You did it! Level complete!';
+      }
+      if (typeof this.onWin === 'function') {
+        this.onWin();
       }
     }
   }

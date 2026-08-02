@@ -247,6 +247,80 @@ body {
   50% { transform: scale(1.03); }
 }
 
+/* Screen markup uses story-* + shared btn classes */
+.story-hero {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: center;
+  max-width: 36rem;
+  animation: story-fade-in 0.9s ease-out both;
+}
+
+.story-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(27, 42, 74, 0.78);
+  background: rgba(255, 250, 240, 0.72);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+}
+
+.story-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 8vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  text-shadow: 0 3px 0 rgba(255, 250, 240, 0.55);
+}
+
+.story-text {
+  margin: 0;
+  max-width: 28rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.2vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(27, 42, 74, 0.9);
+  text-wrap: balance;
+}
+
+.story-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.story-actions .btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  min-width: 12rem;
+  min-height: 3.6rem;
+  padding: 1rem 1.75rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+}
+
+.story-actions .btn-primary {
+  background: linear-gradient(180deg, #ffe08a 0%, #ffd166 50%, #80ed99 100%);
+}
+
+.story-actions .btn-secondary {
+  background: linear-gradient(180deg, #c9f7ff 0%, #9bf6ff 55%, #7ad7e8 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   body,
   .story-card,
@@ -256,7 +330,8 @@ body {
   .story-dragon svg,
   .story-card__text,
   .story-next,
-  .story-card__hint {
+  .story-card__hint,
+  .story-hero {
     animation: none !important;
   }
 }

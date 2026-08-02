@@ -1,6 +1,6 @@
 // ---------------------------------------------------------
 // Dragon Adventure – Controls
-// Simple, readable keyboard input for kids
+// Keyboard + on-screen touch buttons for phones/tablets
 // ---------------------------------------------------------
 
 export class Controls {
@@ -10,7 +10,9 @@ export class Controls {
     this.jump = false;
     this.dash = false;
 
+    this._touchCleanups = [];
     this.#addListeners();
+    this.#wireTouchPad();
   }
 
   #addListeners() {
@@ -85,6 +87,52 @@ export class Controls {
     window.addEventListener('keyup', this._onKeyUp);
   }
 
+  /**
+   * Wire big on-screen Left / Right / Jump buttons.
+   * Uses pointer events so mouse, touch, and pen all work.
+   */
+  #wireTouchPad() {
+    const pad = document.getElementById('touchControls');
+    if (!pad) return;
+
+    pad.hidden = false;
+
+    const bind = (id, prop) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+
+      const press = (event) => {
+        event.preventDefault();
+        this[prop] = true;
+        btn.classList.add('is-pressed');
+      };
+      const release = (event) => {
+        if (event) event.preventDefault();
+        this[prop] = false;
+        btn.classList.remove('is-pressed');
+      };
+
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointerleave', release);
+      btn.addEventListener('pointercancel', release);
+      // Avoid the 300ms click delay / accidental double-fire on some mobiles
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      this._touchCleanups.push(() => {
+        btn.removeEventListener('pointerdown', press);
+        btn.removeEventListener('pointerup', release);
+        btn.removeEventListener('pointerleave', release);
+        btn.removeEventListener('pointercancel', release);
+        release();
+      });
+    };
+
+    bind('touchLeft', 'left');
+    bind('touchRight', 'right');
+    bind('touchJump', 'jump');
+  }
+
   /** Clear keys and remove listeners (when leaving the game screen). */
   dispose() {
     this.left = false;
@@ -98,6 +146,12 @@ export class Controls {
     if (this._onKeyUp) {
       window.removeEventListener('keyup', this._onKeyUp);
     }
+
+    this._touchCleanups.forEach((fn) => fn());
+    this._touchCleanups = [];
+
+    const pad = document.getElementById('touchControls');
+    if (pad) pad.hidden = true;
   }
 }
 

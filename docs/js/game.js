@@ -40,11 +40,19 @@ function setPauseOverlay(visible) {
   overlay.hidden = !visible;
 }
 
+function setWinOverlay(visible) {
+  const overlay = document.getElementById('winOverlay');
+  if (!overlay) return;
+  overlay.hidden = !visible;
+}
+
 function wirePauseUi() {
   const pauseBtn = document.getElementById('pauseBtn');
   const resumeBtn = document.getElementById('resumeBtn');
   const restartBtn = document.getElementById('restartBtn');
   const homeBtn = document.getElementById('homeBtn');
+  const winAgainBtn = document.getElementById('winAgainBtn');
+  const winHomeBtn = document.getElementById('winHomeBtn');
 
   if (pauseBtn) {
     pauseBtn.onclick = () => {
@@ -64,12 +72,26 @@ function wirePauseUi() {
   if (restartBtn) {
     restartBtn.onclick = () => {
       setPauseOverlay(false);
+      setWinOverlay(false);
       window.startDragonGame(true);
     };
   }
 
   if (homeBtn) {
     homeBtn.onclick = () => {
+      window.navigateTo('home');
+    };
+  }
+
+  if (winAgainBtn) {
+    winAgainBtn.onclick = () => {
+      setWinOverlay(false);
+      window.startDragonGame(true);
+    };
+  }
+
+  if (winHomeBtn) {
+    winHomeBtn.onclick = () => {
       window.navigateTo('home');
     };
   }
@@ -110,7 +132,13 @@ window.startDragonGame = function (forceRestart = false) {
   // Hide loading screen, show HUD + canvas
   showGameUi();
   setPauseOverlay(false);
+  setWinOverlay(false);
   wirePauseUi();
+
+  // When the level is cleared, show Play again / Home (not just a canvas banner).
+  engine.onWin = () => {
+    setWinOverlay(true);
+  };
 
   // Start game loop
   engine.start();

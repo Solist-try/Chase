@@ -3,10 +3,18 @@
   const backBtn = document.getElementById('backBtn');
 
   if (nextBtn) {
-    nextBtn.onclick = () => navigateTo('game');
+    nextBtn.onclick = () => {
+      if (typeof window.navigateTo === 'function') {
+        window.navigateTo('game');
+      }
+    };
   }
 
   if (backBtn) {
-    backBtn.onclick = () => navigateTo('home');
+    backBtn.onclick = () => {
+      if (typeof window.navigateTo === 'function') {
+        window.navigateTo('home');
+      }
+    };
   }
 })();
