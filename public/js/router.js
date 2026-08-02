@@ -1,6 +1,6 @@
 /**
  * Tiny client-side router for Dragon Adventure!
- * Injects screen HTML into #app, THEN loads that screen's JS file.
+ * Loads screen HTML from public/screens/ into #app.
  */
 
 const routes = {
@@ -11,8 +11,43 @@ const routes = {
   settings: 'screens/settings.html',
 };
 
-/** Screen scripts that use ES module imports. */
-const moduleRoutes = new Set(['game']);
+/**
+ * Scripts inserted with innerHTML do not run.
+ * Recreate each <script> so the browser executes it.
+ */
+async function runScriptsIn(container) {
+  const scripts = [...container.querySelectorAll('script')];
+
+  for (const oldScript of scripts) {
+    const script = document.createElement('script');
+
+    for (const attr of oldScript.attributes) {
+      script.setAttribute(attr.name, attr.value);
+    }
+
+    if (oldScript.src) {
+      // Cache-bust so re-visiting a screen re-runs module setup.
+      const url = new URL(oldScript.src, window.location.href);
+      url.searchParams.set('t', String(Date.now()));
+      script.src = url.pathname + url.search;
+    } else {
+      script.textContent = oldScript.textContent;
+    }
+
+    const done = oldScript.src
+      ? new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = () =>
+            reject(new Error(`Failed to load script: ${script.src}`));
+        })
+      : Promise.resolve();
+
+    oldScript.replaceWith(script);
+    await done;
+  }
+
+  return scripts.length > 0;
+}
 
 async function loadRoute(routeName) {
   const path = routes[routeName];
@@ -27,7 +62,7 @@ async function loadRoute(routeName) {
     window.__stopAdventure = null;
   }
 
-  // 1) Fetch + inject HTML first so #gameCanvas (etc.) exist in the DOM.
+  // 1) Load screen HTML into #app
   const html = await fetch(path).then((res) => res.text());
   const app = document.getElementById('app');
   if (!app) {
@@ -36,14 +71,15 @@ async function loadRoute(routeName) {
   }
   app.innerHTML = html;
 
-  // 2) AFTER HTML is in the page, load the screen's JS.
-  const script = document.createElement('script');
-  if (moduleRoutes.has(routeName)) {
-    script.type = 'module';
+  // 2) Run scripts declared in the screen HTML (e.g. game.js module).
+  const ranScreenScripts = await runScriptsIn(app);
+
+  // 3) Fallback for screens that still use separate public/js/<route>.js files.
+  if (!ranScreenScripts) {
+    const script = document.createElement('script');
+    script.src = `js/${routeName}.js?t=${Date.now()}`;
+    document.body.appendChild(script);
   }
-  // Cache-bust so re-visiting a screen re-runs setup code.
-  script.src = `js/${routeName}.js?t=${Date.now()}`;
-  document.body.appendChild(script);
 }
 
 // Allow navigation from anywhere
