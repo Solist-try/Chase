@@ -1,0 +1,222 @@
+/* Dragon Adventure — pause modal
+   rainbow borders · soft shadows · centered layout · big kid-readable text
+*/
+
+:root {
+  --ink: #1b2a4a;
+  --paper: #fffaf0;
+  --resume: #80ed99;
+  --restart: #ffd166;
+  --home: #9bf6ff;
+  --berry: #ff4d6d;
+  --mango: #ff9f1c;
+  --lemon: #ffe566;
+  --mint: #80ed99;
+  --sky: #00bbf9;
+  --grape: #b5179e;
+  --pink: #f72585;
+
+  --font-display: 'Fredoka', 'Nunito', sans-serif;
+  --font-body: 'Nunito', 'Fredoka', sans-serif;
+
+  --shadow-soft: 0 14px 36px rgba(27, 42, 74, 0.16);
+  --shadow-btn: 0 8px 0 rgba(27, 42, 74, 0.12), 0 14px 24px rgba(27, 42, 74, 0.1);
+  --shadow-btn-press: 0 3px 0 rgba(27, 42, 74, 0.12), 0 6px 14px rgba(27, 42, 74, 0.1);
+
+  --rainbow: linear-gradient(
+    90deg,
+    var(--berry),
+    var(--mango),
+    var(--lemon),
+    var(--mint),
+    var(--sky),
+    var(--grape),
+    var(--pink)
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 55% 40% at 15% 12%, rgba(255, 77, 109, 0.28), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 88% 18%, rgba(0, 187, 249, 0.32), transparent 52%),
+    radial-gradient(ellipse 45% 35% at 50% 100%, rgba(255, 209, 102, 0.35), transparent 55%),
+    linear-gradient(165deg, #7ec8e3 0%, #b8f2c8 48%, #ffe566 100%);
+  background-attachment: fixed;
+}
+
+/* ---------- Centered modal layout ---------- */
+.pause-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  text-align: center;
+}
+
+.pause-modal {
+  width: min(100%, 28rem);
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 2.15rem) clamp(1.25rem, 4vw, 1.85rem);
+  border-radius: 2rem;
+  /* Soft inner panel */
+  background: rgba(255, 250, 240, 0.95);
+  /* Rainbow border */
+  border: 6px solid transparent;
+  background-image:
+    linear-gradient(rgba(255, 250, 240, 0.96), rgba(255, 250, 240, 0.96)),
+    var(--rainbow);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: auto, 200% 100%;
+  box-shadow: var(--shadow-soft);
+  animation: pause-border-shift 8s linear infinite;
+}
+
+.pause-modal__header {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+/* ---------- Big readable text ---------- */
+.pause-modal__eyebrow {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--berry);
+}
+
+.pause-modal__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 11vw, 4.75rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  background: var(--rainbow);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: pause-title-shift 7s linear infinite;
+}
+
+.pause-modal__lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(1.2rem, 3.2vw, 1.45rem);
+  line-height: 1.35;
+  color: rgba(27, 42, 74, 0.84);
+  max-width: 22rem;
+  text-wrap: balance;
+}
+
+.pause-modal__actions {
+  display: grid;
+  gap: 1rem;
+  justify-items: stretch;
+}
+
+/* Large buttons: rainbow borders + soft shadows + big type */
+.pause-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 4.4rem;
+  padding: 1.15rem 1.75rem;
+  border: 4px solid transparent;
+  border-radius: 1.5rem;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4.2vw, 1.85rem);
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  color: var(--ink);
+  cursor: pointer;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pause-btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 0 rgba(27, 42, 74, 0.12), 0 18px 28px rgba(27, 42, 74, 0.12);
+}
+
+.pause-btn:active {
+  transform: translateY(4px);
+  box-shadow: var(--shadow-btn-press);
+}
+
+.pause-btn:focus-visible {
+  outline: 4px solid var(--sky);
+  outline-offset: 4px;
+}
+
+.pause-btn--resume {
+  background-image:
+    linear-gradient(180deg, #b7f7c5 0%, var(--resume) 50%, #5fd67d 100%),
+    var(--rainbow);
+}
+
+.pause-btn--restart {
+  background-image:
+    linear-gradient(180deg, #ffe08a 0%, var(--restart) 50%, #f4b942 100%),
+    var(--rainbow);
+}
+
+.pause-btn--home {
+  background-image:
+    linear-gradient(180deg, #c9f7ff 0%, var(--home) 50%, #7ad7e8 100%),
+    var(--rainbow);
+}
+
+@keyframes pause-border-shift {
+  0% { background-position: 0% 50%, 0% 50%; }
+  100% { background-position: 0% 50%, 200% 50%; }
+}
+
+@keyframes pause-title-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@media (max-width: 420px) {
+  .pause-modal {
+    border-radius: 1.6rem;
+    border-width: 5px;
+  }
+
+  .pause-btn {
+    min-height: 4rem;
+    border-radius: 1.25rem;
+    font-size: 1.4rem;
+  }
+}
