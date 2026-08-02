@@ -2,16 +2,32 @@
  * Tiny game engine — runs the core update/render loop every frame.
  */
 
+const canvas = document.getElementById('gameCanvas');
+
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error('Game canvas (#gameCanvas) not found');
+}
+
+// Logical game size
+canvas.width = 960;
+canvas.height = 540;
+
+/** @type {CanvasRenderingContext2D} */
+const ctx = canvas.getContext('2d');
+
+// Store ctx globally so screens/helpers can draw with it.
+globalThis.ctx = ctx;
+globalThis.canvas = canvas;
+
 export class GameEngine {
   /**
    * @param {object} [options]
-   * @param {HTMLCanvasElement} [options.canvas]
    * @param {(dt: number) => void} [options.update]
-   * @param {(ctx: CanvasRenderingContext2D | null) => void} [options.render]
+   * @param {() => void} [options.render]
    */
   constructor(options = {}) {
-    this.canvas = options.canvas ?? null;
-    this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+    this.canvas = canvas;
+    this.ctx = ctx;
     this.onUpdate = options.update ?? null;
     this.onRender = options.render ?? null;
 
@@ -38,7 +54,7 @@ export class GameEngine {
   }
 
   /**
-   * One frame: update → render → schedule next frame.
+   * One frame: clear → update → render → schedule next frame.
    * @param {number} time
    */
   loop(time) {
@@ -46,6 +62,9 @@ export class GameEngine {
 
     const dt = Math.min(0.05, (time - this._lastTime) / 1000);
     this._lastTime = time;
+
+    // Clear the canvas each frame
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     this.update(dt);
     this.render();
@@ -66,9 +85,10 @@ export class GameEngine {
   /** Draw the current frame. */
   render() {
     if (typeof this.onRender === 'function') {
-      this.onRender(this.ctx);
+      this.onRender();
     }
   }
 }
 
+export { canvas, ctx };
 export default GameEngine;
