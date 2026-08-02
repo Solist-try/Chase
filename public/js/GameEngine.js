@@ -23,7 +23,23 @@ export class GameEngine {
       : canvas.height - dragon.height;
 
     this.running = false;
+    this.won = false;
     this._jumpLocked = false;
+
+    this.starsCollected = 0;
+    this.coinsCollected = 0;
+    this.starsTotal = level.collectibles.filter((c) => c.type === 'star').length;
+    this.coinsTotal = level.collectibles.filter((c) => c.type === 'coin').length;
+
+    this.hud = {
+      starCount: document.getElementById('starCount'),
+      starTotal: document.querySelector('#gameHud .hud__stat[aria-label="Stars"] .hud__stat-total'),
+      coinCount: document.getElementById('coinCount'),
+      coinTotal: document.querySelector('#gameHud .hud__stat[aria-label="Coins"] .hud__stat-total'),
+      levelGoal: document.getElementById('levelGoal'),
+    };
+
+    this.updateHud();
   }
 
   start() {
@@ -46,6 +62,9 @@ export class GameEngine {
   }
 
   update(delta) {
+    // After a win, keep drawing but stop gameplay updates.
+    if (this.won) return;
+
     // ---------------------------
     // Apply gravity
     // ---------------------------
@@ -132,6 +151,63 @@ export class GameEngine {
         this.dragon.velocityY = -6;
       }
     });
+
+    // ---------------------------
+    // Collectibles pickup + HUD
+    // ---------------------------
+    this.collectPickups();
+  }
+
+  collectPickups() {
+    const dragon = this.dragon;
+
+    this.level.collectibles.forEach((item) => {
+      if (item.collected) return;
+
+      const radius = item.radius || 10;
+      const closestX = Math.max(dragon.x, Math.min(item.x, dragon.x + dragon.width));
+      const closestY = Math.max(dragon.y, Math.min(item.y, dragon.y + dragon.height));
+      const dx = item.x - closestX;
+      const dy = item.y - closestY;
+      const hit = dx * dx + dy * dy <= radius * radius;
+
+      if (!hit) return;
+
+      item.collected = true;
+      if (item.type === 'coin') {
+        this.coinsCollected += 1;
+      } else {
+        this.starsCollected += 1;
+      }
+      this.updateHud();
+    });
+
+    const allGone = this.level.collectibles.every((item) => item.collected);
+    if (allGone && !this.won) {
+      this.won = true;
+      if (this.hud.levelGoal) {
+        this.hud.levelGoal.textContent = 'You did it! Level complete!';
+      }
+    }
+  }
+
+  updateHud() {
+    if (this.hud.starCount) {
+      this.hud.starCount.textContent = String(this.starsCollected);
+    }
+    if (this.hud.starTotal) {
+      this.hud.starTotal.textContent = `/${this.starsTotal}`;
+    }
+    if (this.hud.coinCount) {
+      this.hud.coinCount.textContent = String(this.coinsCollected);
+    }
+    if (this.hud.coinTotal) {
+      this.hud.coinTotal.textContent = `/${this.coinsTotal}`;
+    }
+    if (this.hud.levelGoal && !this.won) {
+      this.hud.levelGoal.textContent =
+        this.level.goalText || 'Collect every star and coin!';
+    }
   }
 
   render() {
@@ -145,12 +221,34 @@ export class GameEngine {
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
     });
 
-    // Draw collectibles (optional)
-    (this.level.collectibles || []).forEach((c) => {
-      this.ctx.fillStyle = 'yellow';
-      this.ctx.beginPath();
-      this.ctx.arc(c.x, c.y, 10, 0, Math.PI * 2);
-      this.ctx.fill();
+    // Draw remaining collectibles
+    this.level.collectibles.forEach((c) => {
+      if (c.collected) return;
+      const radius = c.radius || 10;
+
+      if (c.type === 'coin') {
+        this.ctx.fillStyle = '#ffd166';
+        this.ctx.beginPath();
+        this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#c98a00';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+      } else {
+        // Simple star-like sparkle (bright yellow circle + cross)
+        this.ctx.fillStyle = '#ffe566';
+        this.ctx.beginPath();
+        this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#fffaf0';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(c.x - radius, c.y);
+        this.ctx.lineTo(c.x + radius, c.y);
+        this.ctx.moveTo(c.x, c.y - radius);
+        this.ctx.lineTo(c.x, c.y + radius);
+        this.ctx.stroke();
+      }
     });
 
     // Draw all enemy types
@@ -158,6 +256,24 @@ export class GameEngine {
 
     // Draw dragon (eyes + smile live in Dragon.draw)
     this.dragon.draw(this.ctx);
+
+    // Win banner
+    if (this.won) {
+      this.ctx.fillStyle = 'rgba(27, 42, 74, 0.45)';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      this.ctx.fillStyle = '#fffaf0';
+      this.ctx.font = 'bold 28px Fredoka, Nunito, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('You win!', this.canvas.width / 2, this.canvas.height / 2 - 10);
+
+      this.ctx.font = 'bold 16px Nunito, sans-serif';
+      this.ctx.fillText(
+        'All stars and coins collected!',
+        this.canvas.width / 2,
+        this.canvas.height / 2 + 22,
+      );
+    }
   }
 
   /** Turn level.background into a canvas fill style. */

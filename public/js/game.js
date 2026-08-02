@@ -8,6 +8,9 @@ import { Dragon } from './Dragon.js';
 import { Controls } from './controls.js';
 import { Level1 } from './Level1.js';
 
+let engine = null;
+let controls = null;
+
 function showGameUi() {
   const loadingScreen = document.getElementById('loadingScreen');
   const gameHud = document.getElementById('gameHud');
@@ -31,7 +34,48 @@ function showGameUi() {
   }
 }
 
-window.startDragonGame = function () {
+function setPauseOverlay(visible) {
+  const overlay = document.getElementById('pauseOverlay');
+  if (!overlay) return;
+  overlay.hidden = !visible;
+}
+
+function wirePauseUi() {
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const homeBtn = document.getElementById('homeBtn');
+
+  if (pauseBtn) {
+    pauseBtn.onclick = () => {
+      if (!engine) return;
+      engine.pause();
+      setPauseOverlay(true);
+    };
+  }
+
+  if (resumeBtn) {
+    resumeBtn.onclick = () => {
+      setPauseOverlay(false);
+      engine?.resume();
+    };
+  }
+
+  if (restartBtn) {
+    restartBtn.onclick = () => {
+      setPauseOverlay(false);
+      window.startDragonGame(true);
+    };
+  }
+
+  if (homeBtn) {
+    homeBtn.onclick = () => {
+      window.navigateTo('home');
+    };
+  }
+}
+
+window.startDragonGame = function (forceRestart = false) {
   // Get canvas from game screen
   const canvas = document.getElementById('gameCanvas');
 
@@ -42,37 +86,45 @@ window.startDragonGame = function () {
     return;
   }
 
+  // Stop a previous run before starting a new one (restart / remount).
+  if (engine) {
+    engine.pause();
+    engine = null;
+  }
+  if (controls) {
+    controls.dispose();
+    controls = null;
+  }
+
   canvas.width = 640;
   canvas.height = 360;
 
   // Create game objects
   const dragon = new Dragon(50, canvas.height - 100);
-  const controls = new Controls();
+  controls = new Controls();
   const level = new Level1(canvas);
 
   // Create engine
-  const engine = new GameEngine(canvas, level, dragon, controls);
+  engine = new GameEngine(canvas, level, dragon, controls);
 
   // Hide loading screen, show HUD + canvas
   showGameUi();
+  setPauseOverlay(false);
+  wirePauseUi();
 
   // Start game loop
   engine.start();
 
-  // Pause button (router-friendly)
-  const pauseBtn = document.getElementById('pauseBtn');
-  if (pauseBtn) {
-    pauseBtn.onclick = () => {
-      engine.pause();
-      window.navigateTo('pause');
-    };
-  }
-
   // Router cleanup when leaving this screen
   window.__stopAdventure = () => {
-    engine.pause();
-    controls.dispose();
+    engine?.pause();
+    controls?.dispose();
+    engine = null;
+    controls = null;
   };
+
+  // forceRestart is accepted for restart button clarity
+  void forceRestart;
 };
 
 function tryStartDragonGame() {

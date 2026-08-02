@@ -11,6 +11,7 @@ export class Level1 {
   constructor(canvas) {
     this.name = 'Level 1';
     this.background = 'linear-gradient(to bottom, #ff9a9e, #fad0c4)';
+    this.goalText = 'Collect every star and coin!';
 
     this.platforms = [
       { x: 0, y: canvas.height - 40, width: canvas.width, height: 40 },
@@ -19,10 +20,16 @@ export class Level1 {
       { x: 450, y: canvas.height - 160, width: 100, height: 20 },
     ];
 
+    // Stars + coins the dragon can pick up
     this.collectibles = [
-      { x: 100, y: canvas.height - 150 },
-      { x: 300, y: canvas.height - 230 },
-      { x: 480, y: canvas.height - 190 },
+      { x: 100, y: canvas.height - 150, type: 'star', radius: 10, collected: false },
+      { x: 300, y: canvas.height - 230, type: 'star', radius: 10, collected: false },
+      { x: 480, y: canvas.height - 190, type: 'star', radius: 10, collected: false },
+      { x: 200, y: canvas.height - 90, type: 'coin', radius: 8, collected: false },
+      { x: 360, y: canvas.height - 220, type: 'coin', radius: 8, collected: false },
+      { x: 520, y: canvas.height - 90, type: 'coin', radius: 8, collected: false },
+      { x: 140, y: canvas.height - 250, type: 'coin', radius: 8, collected: false },
+      { x: 420, y: canvas.height - 250, type: 'coin', radius: 8, collected: false },
     ];
 
     this.enemies = [
@@ -31,7 +38,6 @@ export class Level1 {
       new FloaterEnemy(150, canvas.height - 260),
     ];
 
-    // Where the dragon begins (used if a screen prefers level spawn)
     this.startX = 40;
     this.startY = canvas.height - 80;
   }

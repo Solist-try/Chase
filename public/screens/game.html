@@ -9,7 +9,7 @@
   <header id="gameHud" class="hud is-hidden" hidden>
     <div class="hud__level">
       <p id="levelName" class="hud__label">Level 1</p>
-      <p id="levelGoal" class="hud__goal">Jump the platforms!</p>
+      <p id="levelGoal" class="hud__goal">Collect every star and coin!</p>
     </div>
 
     <div class="hud__meters">
@@ -31,6 +31,22 @@
     <canvas id="gameCanvas" class="game-canvas"></canvas>
   </div>
 
-  <!-- Required: canvas, pauseBtn, and game module (see above + script) -->
+  <!-- In-game pause (keeps the engine alive for Resume) -->
+  <div id="pauseOverlay" class="pause-menu" hidden>
+    <h2>Paused</h2>
+    <p>Your dragon is waiting. What would you like to do?</p>
+    <div class="pause-menu__actions">
+      <button id="resumeBtn" class="pause-menu__btn pause-menu__btn--resume" type="button">
+        Resume
+      </button>
+      <button id="restartBtn" class="pause-menu__btn pause-menu__btn--restart" type="button">
+        Restart
+      </button>
+      <button id="homeBtn" class="pause-menu__btn pause-menu__btn--home" type="button">
+        Home
+      </button>
+    </div>
+  </div>
+
   <script type="module" src="js/game.js"></script>
 </section>
