@@ -25,12 +25,10 @@ export class Level1 {
       { x: 480, y: canvas.height - 190 },
     ];
 
-    // Cute walker, hopper, and floater enemies
     this.enemies = [
       new WalkerEnemy(200, canvas.height - 75),
-      new WalkerEnemy(420, canvas.height - 195),
-      new HopperEnemy(320, canvas.height - 235),
-      new FloaterEnemy(500, canvas.height - 250),
+      new HopperEnemy(420, canvas.height - 195),
+      new FloaterEnemy(150, canvas.height - 260),
     ];
 
     // Where the dragon begins (used if a screen prefers level spawn)
