@@ -2,6 +2,14 @@
  * Tiny game engine — runs the core update/render loop every frame.
  */
 
+import {
+  startControls,
+  stopControls,
+  isLeftPressed,
+  isRightPressed,
+  isJumpPressed,
+} from './controls.js';
+
 const canvas = document.getElementById('gameCanvas');
 
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -22,24 +30,30 @@ globalThis.canvas = canvas;
 export class GameEngine {
   /**
    * @param {object} [options]
+   * @param {import('./Dragon.js').Dragon} [options.dragon]
+   * @param {number} [options.groundY]
    * @param {(dt: number) => void} [options.update]
    * @param {() => void} [options.render]
    */
   constructor(options = {}) {
     this.canvas = canvas;
     this.ctx = ctx;
+    this.dragon = options.dragon ?? null;
+    this.groundY = options.groundY ?? canvas.height - 72;
     this.onUpdate = options.update ?? null;
     this.onRender = options.render ?? null;
 
     this._running = false;
     this._rafId = 0;
     this._lastTime = 0;
+    this._jumpLocked = false;
   }
 
   /** Begin the animation loop. */
   start() {
     if (this._running) return;
     this._running = true;
+    startControls();
     this._lastTime = performance.now();
     this._rafId = requestAnimationFrame((time) => this.loop(time));
   }
@@ -51,6 +65,7 @@ export class GameEngine {
       cancelAnimationFrame(this._rafId);
       this._rafId = 0;
     }
+    stopControls();
   }
 
   /**
@@ -74,9 +89,42 @@ export class GameEngine {
 
   /**
    * Update game state for this frame.
+   * Reads controls and modifies dragon velocity, then applies physics.
    * @param {number} dt - Seconds since last frame
    */
   update(dt) {
+    const dragon = this.dragon;
+
+    if (dragon) {
+      // Example: ArrowLeft → dragon.vx = -speed
+      dragon.vx = 0;
+
+      if (isLeftPressed()) {
+        dragon.vx = -dragon.speed;
+        dragon.facing = -1;
+      }
+      if (isRightPressed()) {
+        dragon.vx = dragon.speed;
+        dragon.facing = 1;
+      }
+
+      // Jump once per key press (no multi-jump while held).
+      if (isJumpPressed()) {
+        if (!this._jumpLocked && dragon.onGround) {
+          dragon.vy = -dragon.jumpForce;
+          dragon.onGround = false;
+        }
+        this._jumpLocked = true;
+      } else {
+        this._jumpLocked = false;
+      }
+
+      dragon.update(dt, {
+        width: canvas.width,
+        groundY: this.groundY,
+      });
+    }
+
     if (typeof this.onUpdate === 'function') {
       this.onUpdate(dt);
     }

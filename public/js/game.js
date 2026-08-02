@@ -17,32 +17,6 @@
     groundY,
   });
 
-  const keys = {
-    left: false,
-    right: false,
-    jump: false,
-  };
-
-  function onKeyDown(event) {
-    const key = event.key.toLowerCase();
-    if (key === 'arrowleft' || key === 'a') keys.left = true;
-    if (key === 'arrowright' || key === 'd') keys.right = true;
-    if (key === ' ' || key === 'arrowup' || key === 'w') {
-      keys.jump = true;
-      event.preventDefault();
-    }
-  }
-
-  function onKeyUp(event) {
-    const key = event.key.toLowerCase();
-    if (key === 'arrowleft' || key === 'a') keys.left = false;
-    if (key === 'arrowright' || key === 'd') keys.right = false;
-    if (key === ' ' || key === 'arrowup' || key === 'w') keys.jump = false;
-  }
-
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-
   function drawWorld() {
     const width = canvas.width;
     const height = canvas.height;
@@ -79,25 +53,18 @@
     ctx.fill();
   }
 
-  function update(dt) {
-    dragon.handleInput(keys);
-    dragon.update(dt, { width: canvas.width, groundY });
-    // Jump is edge-triggered so holding Space doesn't multi-jump.
-    keys.jump = false;
-  }
-
   function render() {
     drawWorld();
     dragon.draw(ctx);
   }
 
-  const engine = new GameEngine({ update, render });
+  const engine = new GameEngine({
+    dragon,
+    groundY,
+    render,
+  });
   engine.start();
 
-  // Let the router stop the loop when leaving this screen.
-  window.__stopAdventure = () => {
-    engine.stop();
-    window.removeEventListener('keydown', onKeyDown);
-    window.removeEventListener('keyup', onKeyUp);
-  };
+  // Let the router stop the loop (and key listeners) when leaving this screen.
+  window.__stopAdventure = () => engine.stop();
 })();

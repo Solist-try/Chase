@@ -38,29 +38,9 @@ export class Dragon {
   }
 
   /**
-   * Apply keyboard input to velocity.
-   * @param {{ left?: boolean, right?: boolean, jump?: boolean }} input
-   */
-  handleInput(input = {}) {
-    this.vx = 0;
-
-    if (input.left) {
-      this.vx = -this.speed;
-      this.facing = -1;
-    }
-    if (input.right) {
-      this.vx = this.speed;
-      this.facing = 1;
-    }
-
-    if (input.jump && this.onGround) {
-      this.vy = -this.jumpForce;
-      this.onGround = false;
-    }
-  }
-
-  /**
    * Apply physics for one frame.
+   * Velocity from controls is set in GameEngine.update().
+   */
    * @param {number} dt - Seconds since last frame
    * @param {{ width?: number, groundY?: number }} [world]
    */
