@@ -7,7 +7,7 @@ import {
   stopControls,
   isLeftPressed,
   isRightPressed,
-  isJumpPressed,
+  consumeJump,
 } from './controls.js';
 
 /** @type {HTMLCanvasElement | null} */
@@ -33,6 +33,13 @@ function bindCanvas() {
   return { canvas, ctx };
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(resolve, ms)),
+  ]);
+}
+
 export class GameEngine {
   constructor() {
     this.canvas = null;
@@ -45,7 +52,6 @@ export class GameEngine {
     this._running = false;
     this._rafId = 0;
     this._lastTime = 0;
-    this._jumpLocked = false;
   }
 
   /**
@@ -67,16 +73,36 @@ export class GameEngine {
       dragon.groundY = this.groundY;
     }
 
-    await this.loadAssets(level);
+    try {
+      await this.loadAssets(level);
 
-    // Canvas may still be hidden; bind it once assets are ready.
-    const bound = bindCanvas();
-    this.canvas = bound.canvas;
-    this.ctx = bound.ctx;
-    this.groundY = level?.groundY ?? this.canvas.height - 72;
+      const bound = bindCanvas();
+      this.canvas = bound.canvas;
+      this.ctx = bound.ctx;
+      this.groundY = level?.groundY ?? this.canvas.height - 72;
+      if (dragon) dragon.groundY = this.groundY;
+    } catch (error) {
+      console.error('GameEngine.start failed while loading:', error);
+    } finally {
+      // Never leave the player on an infinite loading screen.
+      if (typeof onReady === 'function') {
+        try {
+          onReady();
+        } catch (readyError) {
+          console.error('onReady callback failed:', readyError);
+        }
+      }
+    }
 
-    if (typeof onReady === 'function') {
-      onReady();
+    if (!this.canvas || !this.ctx) {
+      try {
+        const bound = bindCanvas();
+        this.canvas = bound.canvas;
+        this.ctx = bound.ctx;
+      } catch (error) {
+        console.error('Could not bind game canvas:', error);
+        return;
+      }
     }
 
     this._running = true;
@@ -87,33 +113,36 @@ export class GameEngine {
 
   /**
    * Prepare level / font assets before gameplay begins.
+   * Always resolves within a short timeout so loading cannot hang.
    * @param {object} [level]
    */
   async loadAssets(level) {
     const jobs = [];
 
-    // Wait for kid-friendly web fonts when available.
+    // Fonts can hang if a remote stylesheet never finishes — cap the wait.
     if (document.fonts?.ready) {
-      jobs.push(document.fonts.ready);
+      jobs.push(withTimeout(document.fonts.ready, 600));
     }
 
-    // Future: image / sound URLs from the level can be preloaded here.
     const assetUrls = level?.assets ?? [];
     for (const url of assetUrls) {
       jobs.push(
-        new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = url;
-        }),
+        withTimeout(
+          new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = url;
+          }),
+          600,
+        ),
       );
     }
 
-    // Short beat so the loading screen is visible even when assets are local.
-    jobs.push(new Promise((resolve) => setTimeout(resolve, 350)));
+    // Brief pause so the loading screen can paint once.
+    jobs.push(new Promise((resolve) => setTimeout(resolve, 200)));
 
-    await Promise.all(jobs);
+    await withTimeout(Promise.all(jobs), 900);
   }
 
   /** Stop the animation loop. */
@@ -154,7 +183,7 @@ export class GameEngine {
     const dragon = this.dragon;
     if (!dragon || !canvas) return;
 
-    // Example: ArrowLeft → dragon.vx = -speed
+    // Left / right movement
     dragon.vx = 0;
 
     if (isLeftPressed()) {
@@ -166,14 +195,9 @@ export class GameEngine {
       dragon.facing = 1;
     }
 
-    // On jump key: if dragon is on ground → vy = -jumpForce (no double jumps).
-    if (isJumpPressed()) {
-      if (!this._jumpLocked) {
-        dragon.jump();
-      }
-      this._jumpLocked = true;
-    } else {
-      this._jumpLocked = false;
+    // Jump on keydown tap (queued) while grounded — no double jumps.
+    if (consumeJump()) {
+      dragon.jump();
     }
 
     const prevBottom = dragon.y + dragon.radius * 0.9;
@@ -183,7 +207,7 @@ export class GameEngine {
       groundY: this.groundY,
     });
 
-    // Platform collision detection
+    // Land on / collide with platforms every frame.
     this.resolvePlatformCollisions(dragon, prevBottom);
   }
 
@@ -221,10 +245,10 @@ export class GameEngine {
         overlapBottom,
       );
 
-      // Landing on top while falling (or walking off onto a ledge).
-      const wasAbove = prevBottom <= platform.top + 4;
+      // Landing on top while falling.
+      const wasAbove = prevBottom <= platform.top + 6;
       if (
-        (wasAbove && dragon.vy >= 0 && overlapTop <= halfH + 8) ||
+        (wasAbove && dragon.vy >= 0) ||
         (minOverlap === overlapTop && dragon.vy >= 0)
       ) {
         dragon.y = platform.top - halfH;

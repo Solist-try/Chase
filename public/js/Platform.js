@@ -38,6 +38,23 @@ export class Platform {
   }
 
   /**
+   * Draw a rounded (or plain) rectangle path.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
+   * @param {number} r
+   */
+  roundPath(ctx, x, y, w, h, r) {
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x, y, w, h, r);
+      return;
+    }
+    ctx.rect(x, y, w, h);
+  }
+
+  /**
    * Draw the platform.
    * @param {CanvasRenderingContext2D} ctx
    */
@@ -49,20 +66,20 @@ export class Platform {
     // Body
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.roundRect(this.x, this.y, this.width, this.height, 10);
+    this.roundPath(ctx, this.x, this.y, this.width, this.height, 10);
     ctx.fill();
 
     // Bright top lip
     ctx.fillStyle = this.topColor;
     ctx.beginPath();
-    ctx.roundRect(this.x + 4, this.y + 3, this.width - 8, 8, 6);
+    this.roundPath(ctx, this.x + 4, this.y + 3, this.width - 8, 8, 6);
     ctx.fill();
 
     // Outline
     ctx.strokeStyle = '#1b2a4a';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(this.x, this.y, this.width, this.height, 10);
+    this.roundPath(ctx, this.x, this.y, this.width, this.height, 10);
     ctx.stroke();
   }
 }

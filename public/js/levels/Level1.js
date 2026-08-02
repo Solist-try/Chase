@@ -12,10 +12,10 @@ export const Level1 = {
   hillColor: '#7adf8a',
   groundY: 468,
 
-  /** Where the dragon starts. */
+  /** Where the dragon starts (stands on the meadow floor). */
   startPosition: {
     x: 140,
-    y: 380,
+    y: 436,
   },
 
   /** Platforms the dragon can stand on. */

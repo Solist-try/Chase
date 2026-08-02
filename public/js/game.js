@@ -43,7 +43,22 @@ function showGameUi() {
 }
 
 const engine = new GameEngine();
-engine.start(dragon, currentLevel, showGameUi);
 
-// Let the router stop the loop (and key listeners) when leaving this screen.
+// Safety net: if anything goes wrong, still leave the loading screen.
+const readyFallback = window.setTimeout(showGameUi, 1200);
+
+engine
+  .start(dragon, currentLevel, () => {
+    window.clearTimeout(readyFallback);
+    showGameUi();
+  })
+  .catch((error) => {
+    console.error('Failed to start game:', error);
+    window.clearTimeout(readyFallback);
+    showGameUi();
+  });
+
+// Debug/help hooks + router cleanup.
+window.__dragon = dragon;
+window.__engine = engine;
 window.__stopAdventure = () => engine.stop();

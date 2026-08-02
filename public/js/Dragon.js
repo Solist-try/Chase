@@ -74,13 +74,15 @@ export class Dragon {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
 
-    // Floor collision
+    // Floor collision (platforms may set onGround again in GameEngine).
     const floorY = groundY - this.radius * 0.9;
     if (this.y >= floorY) {
       this.y = floorY;
       this.vy = 0;
       this.onGround = true;
-    } else {
+    } else if (this.vy !== 0) {
+      // Only clear grounded while moving vertically; engine platform
+      // collision re-applies onGround when standing on a ledge.
       this.onGround = false;
     }
 
