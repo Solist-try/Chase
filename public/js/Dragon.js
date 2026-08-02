@@ -40,7 +40,6 @@ export class Dragon {
   /**
    * Apply physics for one frame.
    * Velocity from controls is set in GameEngine.update().
-   */
    * @param {number} dt - Seconds since last frame
    * @param {{ width?: number, groundY?: number }} [world]
    */
