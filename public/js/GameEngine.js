@@ -31,6 +31,7 @@ export class GameEngine {
   /**
    * @param {object} [options]
    * @param {import('./Dragon.js').Dragon} [options.dragon]
+   * @param {import('./Platform.js').Platform[]} [options.platforms]
    * @param {number} [options.groundY]
    * @param {(dt: number) => void} [options.update]
    * @param {() => void} [options.render]
@@ -39,6 +40,7 @@ export class GameEngine {
     this.canvas = canvas;
     this.ctx = ctx;
     this.dragon = options.dragon ?? null;
+    this.platforms = options.platforms ?? [];
     this.groundY = options.groundY ?? canvas.height - 72;
     this.onUpdate = options.update ?? null;
     this.onRender = options.render ?? null;
@@ -89,7 +91,7 @@ export class GameEngine {
 
   /**
    * Update game state for this frame.
-   * Reads controls and modifies dragon velocity, then applies physics.
+   * Reads controls, moves the dragon, then resolves platform collisions.
    * @param {number} dt - Seconds since last frame
    */
   update(dt) {
@@ -118,14 +120,83 @@ export class GameEngine {
         this._jumpLocked = false;
       }
 
+      const prevBottom = dragon.y + dragon.radius * 0.9;
+
       dragon.update(dt, {
         width: canvas.width,
         groundY: this.groundY,
       });
+
+      // Platform collision detection
+      this.resolvePlatformCollisions(dragon, prevBottom);
     }
 
     if (typeof this.onUpdate === 'function') {
       this.onUpdate(dt);
+    }
+  }
+
+  /**
+   * Resolve dragon vs platform overlaps (land on top, bump sides/ceiling).
+   * @param {import('./Dragon.js').Dragon} dragon
+   * @param {number} prevBottom
+   */
+  resolvePlatformCollisions(dragon, prevBottom) {
+    const halfW = dragon.radius * 1.05;
+    const halfH = dragon.radius * 0.9;
+
+    for (const platform of this.platforms) {
+      const left = dragon.x - halfW;
+      const right = dragon.x + halfW;
+      const top = dragon.y - halfH;
+      const bottom = dragon.y + halfH;
+
+      const overlaps =
+        right > platform.left &&
+        left < platform.right &&
+        bottom > platform.top &&
+        top < platform.bottom;
+
+      if (!overlaps) continue;
+
+      const overlapLeft = right - platform.left;
+      const overlapRight = platform.right - left;
+      const overlapTop = bottom - platform.top;
+      const overlapBottom = platform.bottom - top;
+      const minOverlap = Math.min(
+        overlapLeft,
+        overlapRight,
+        overlapTop,
+        overlapBottom,
+      );
+
+      // Landing on top while falling (or walking off onto a ledge).
+      const wasAbove = prevBottom <= platform.top + 4;
+      if (
+        (wasAbove && dragon.vy >= 0 && overlapTop <= halfH + 8) ||
+        (minOverlap === overlapTop && dragon.vy >= 0)
+      ) {
+        dragon.y = platform.top - halfH;
+        dragon.vy = 0;
+        dragon.onGround = true;
+        continue;
+      }
+
+      // Hit underside while jumping up.
+      if (minOverlap === overlapBottom && dragon.vy < 0) {
+        dragon.y = platform.bottom + halfH;
+        dragon.vy = 0;
+        continue;
+      }
+
+      // Side bumps.
+      if (minOverlap === overlapLeft) {
+        dragon.x = platform.left - halfW;
+        dragon.vx = 0;
+      } else if (minOverlap === overlapRight) {
+        dragon.x = platform.right + halfW;
+        dragon.vx = 0;
+      }
     }
   }
 
@@ -134,6 +205,9 @@ export class GameEngine {
     if (typeof this.onRender === 'function') {
       this.onRender();
     }
+
+    // Draw platforms if the custom render did not already handle them.
+    // game.js draws them explicitly for layering control.
   }
 }
 
