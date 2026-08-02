@@ -1,13 +1,33 @@
 <section class="page game-page" aria-label="Game">
-  <header class="game-topbar">
-    <div class="game-brand">
-      <p class="game-kicker">Playing now</p>
-      <h1 class="game-title">Dragon Adventure!</h1>
+  <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite">
+    <p class="loading-screen__kicker">Get ready!</p>
+    <h1 class="loading-screen__title">Dragon Adventure!</h1>
+    <p class="loading-screen__text">Loading your meadow…</p>
+    <div class="loading-screen__spinner" aria-hidden="true"></div>
+  </div>
+
+  <header id="gameHud" class="hud is-hidden" hidden>
+    <div class="hud__level">
+      <p id="levelName" class="hud__label">Level 1</p>
+      <p id="levelGoal" class="hud__goal">Jump the platforms!</p>
     </div>
-    <button id="pauseBtn" class="btn btn-pause" type="button">Pause</button>
+
+    <div class="hud__meters">
+      <div class="hud__stat" aria-label="Stars">
+        <span class="hud__icon hud__icon--star" aria-hidden="true">★</span>
+        <span id="starCount" class="hud__stat-value">0</span>
+        <span class="hud__stat-total">/3</span>
+      </div>
+      <div class="hud__stat" aria-label="Coins">
+        <span class="hud__icon hud__icon--coin" aria-hidden="true">●</span>
+        <span id="coinCount" class="hud__stat-value">0</span>
+        <span class="hud__stat-total">/5</span>
+      </div>
+      <button id="pauseBtn" class="hud__pause" type="button">Pause</button>
+    </div>
   </header>
 
-  <div class="game-stage">
+  <div id="gameStage" class="game-stage is-hidden" hidden>
     <canvas
       id="gameCanvas"
       class="game-canvas"
@@ -16,6 +36,4 @@
       aria-label="Game canvas"
     ></canvas>
   </div>
-
-  <p class="game-hint">Arrows / WASD move · Space jump · Reach the goal!</p>
 </section>

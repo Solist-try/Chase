@@ -49,30 +49,71 @@ export class GameEngine {
   }
 
   /**
-   * Begin the animation loop with a dragon and level.
+   * Begin the game with a dragon and level.
+   * Calls onReady when assets are prepared, then starts the loop.
    * @param {import('./Dragon.js').Dragon} dragon
    * @param {object} level
+   * @param {() => void} [onReady] - fired when assets are ready
    */
-  start(dragon, level) {
+  async start(dragon, level, onReady) {
     if (this._running) return;
-
-    const bound = bindCanvas();
-    this.canvas = bound.canvas;
-    this.ctx = bound.ctx;
 
     this.dragon = dragon;
     this.level = level;
     this.platforms = level?.platforms ?? [];
+    this.groundY = level?.groundY ?? 468;
+
+    if (dragon) {
+      dragon.groundY = this.groundY;
+    }
+
+    await this.loadAssets(level);
+
+    // Canvas may still be hidden; bind it once assets are ready.
+    const bound = bindCanvas();
+    this.canvas = bound.canvas;
+    this.ctx = bound.ctx;
     this.groundY = level?.groundY ?? this.canvas.height - 72;
 
-    if (dragon && level?.startPosition) {
-      dragon.groundY = this.groundY;
+    if (typeof onReady === 'function') {
+      onReady();
     }
 
     this._running = true;
     startControls();
     this._lastTime = performance.now();
     this._rafId = requestAnimationFrame((time) => this.loop(time));
+  }
+
+  /**
+   * Prepare level / font assets before gameplay begins.
+   * @param {object} [level]
+   */
+  async loadAssets(level) {
+    const jobs = [];
+
+    // Wait for kid-friendly web fonts when available.
+    if (document.fonts?.ready) {
+      jobs.push(document.fonts.ready);
+    }
+
+    // Future: image / sound URLs from the level can be preloaded here.
+    const assetUrls = level?.assets ?? [];
+    for (const url of assetUrls) {
+      jobs.push(
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = url;
+        }),
+      );
+    }
+
+    // Short beat so the loading screen is visible even when assets are local.
+    jobs.push(new Promise((resolve) => setTimeout(resolve, 350)));
+
+    await Promise.all(jobs);
   }
 
   /** Stop the animation loop. */

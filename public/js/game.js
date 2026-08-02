@@ -7,7 +7,16 @@ if (pauseBtn) {
   pauseBtn.onclick = () => window.navigateTo('pause');
 }
 
+const loadingScreen = document.getElementById('loadingScreen');
+const gameHud = document.getElementById('gameHud');
+const gameStage = document.getElementById('gameStage');
+const levelName = document.getElementById('levelName');
+
 const currentLevel = Level1;
+
+if (levelName && currentLevel.name) {
+  levelName.textContent = currentLevel.name;
+}
 
 const dragon = new Dragon({
   x: currentLevel.startPosition.x,
@@ -15,8 +24,26 @@ const dragon = new Dragon({
   groundY: currentLevel.groundY,
 });
 
+function showGameUi() {
+  // Hide the loading screen when assets are ready.
+  if (loadingScreen) {
+    loadingScreen.classList.add('is-hidden');
+    loadingScreen.hidden = true;
+  }
+
+  // Then show the canvas and HUD.
+  if (gameHud) {
+    gameHud.classList.remove('is-hidden');
+    gameHud.hidden = false;
+  }
+  if (gameStage) {
+    gameStage.classList.remove('is-hidden');
+    gameStage.hidden = false;
+  }
+}
+
 const engine = new GameEngine();
-engine.start(dragon, currentLevel);
+engine.start(dragon, currentLevel, showGameUi);
 
 // Let the router stop the loop (and key listeners) when leaving this screen.
 window.__stopAdventure = () => engine.stop();
