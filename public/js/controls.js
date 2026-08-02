@@ -1,59 +1,104 @@
-/**
- * Keyboard controls — a simple left / right / jump object for GameEngine.
- */
+// ---------------------------------------------------------
+// Dragon Adventure – Controls
+// Simple, readable keyboard input for kids
+// ---------------------------------------------------------
 
-export const controls = {
-  left: false,
-  right: false,
-  jump: false,
-};
+export class Controls {
+  constructor() {
+    this.left = false;
+    this.right = false;
+    this.jump = false;
+    this.dash = false;
 
-function applyKey(event, isDown) {
-  const key = (event.key || '').toLowerCase();
-  const code = event.code || '';
-
-  if (key === 'arrowleft' || key === 'a' || code === 'ArrowLeft' || code === 'KeyA') {
-    controls.left = isDown;
+    this.#addListeners();
   }
-  if (key === 'arrowright' || key === 'd' || code === 'ArrowRight' || code === 'KeyD') {
-    controls.right = isDown;
+
+  #addListeners() {
+    this._onKeyDown = (e) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          this.left = true;
+          break;
+
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          this.right = true;
+          break;
+
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+        case ' ':
+        case 'Spacebar':
+          this.jump = true;
+          e.preventDefault();
+          break;
+
+        case 'Shift':
+          this.dash = true;
+          break;
+      }
+
+      // Some browsers / tools report Space via event.code only.
+      if (e.code === 'Space') {
+        this.jump = true;
+        e.preventDefault();
+      }
+    };
+
+    this._onKeyUp = (e) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          this.left = false;
+          break;
+
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          this.right = false;
+          break;
+
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+        case ' ':
+        case 'Spacebar':
+          this.jump = false;
+          break;
+
+        case 'Shift':
+          this.dash = false;
+          break;
+      }
+
+      if (e.code === 'Space') {
+        this.jump = false;
+      }
+    };
+
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
   }
-  if (
-    key === ' ' ||
-    key === 'spacebar' ||
-    key === 'space' ||
-    key === 'arrowup' ||
-    key === 'w' ||
-    code === 'Space' ||
-    code === 'ArrowUp' ||
-    code === 'KeyW'
-  ) {
-    controls.jump = isDown;
-    if (isDown) event.preventDefault();
+
+  /** Clear keys and remove listeners (when leaving the game screen). */
+  dispose() {
+    this.left = false;
+    this.right = false;
+    this.jump = false;
+    this.dash = false;
+
+    if (this._onKeyDown) {
+      window.removeEventListener('keydown', this._onKeyDown);
+    }
+    if (this._onKeyUp) {
+      window.removeEventListener('keyup', this._onKeyUp);
+    }
   }
 }
 
-function onKeyDown(event) {
-  applyKey(event, true);
-}
-
-function onKeyUp(event) {
-  applyKey(event, false);
-}
-
-/** Start listening for keyboard input. */
-export function startControls() {
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-}
-
-/** Stop listening and clear pressed keys. */
-export function stopControls() {
-  window.removeEventListener('keydown', onKeyDown);
-  window.removeEventListener('keyup', onKeyUp);
-  controls.left = false;
-  controls.right = false;
-  controls.jump = false;
-}
-
-export default controls;
+export default Controls;

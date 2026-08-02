@@ -1,7 +1,7 @@
 import { GameEngine } from './GameEngine.js';
 import { Dragon } from './Dragon.js';
 import { Level1 } from './levels/Level1.js';
-import { controls, startControls, stopControls } from './controls.js';
+import { Controls } from './controls.js';
 
 const pauseBtn = document.getElementById('pauseBtn');
 if (pauseBtn) {
@@ -50,8 +50,7 @@ function startGame() {
     currentLevel.startPosition.y,
   );
 
-  startControls();
-
+  const controls = new Controls();
   const engine = new GameEngine(canvas, currentLevel, dragon, controls);
 
   // Hide loading, show canvas + HUD, then run the loop.
@@ -62,7 +61,7 @@ function startGame() {
   window.__engine = engine;
   window.__stopAdventure = () => {
     engine.pause();
-    stopControls();
+    controls.dispose();
   };
 }
 
