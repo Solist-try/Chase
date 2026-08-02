@@ -117,10 +117,10 @@ export class GameEngine {
     // Cute two-frame bob animation
     this.dragon.updateAnimation(delta);
 
-    // Update enemies (pass delta for hoppers / timed motion)
+    // Update all enemy types (walker, hopper, floater, …)
     this.level.enemies.forEach((enemy) => enemy.update(delta));
 
-    // Dragon hits enemy → bounce back (non-harmful)
+    // Shared collision for every enemy type — gentle bounce, non-harmful
     this.level.enemies.forEach((enemy) => {
       if (
         this.dragon.x < enemy.x + enemy.width &&
@@ -128,13 +128,8 @@ export class GameEngine {
         this.dragon.y < enemy.y + enemy.height &&
         this.dragon.y + this.dragon.height > enemy.y
       ) {
-        // Bounce dragon back gently
         this.dragon.x -= 20 * this.dragon.speed;
-        this.dragon.velocityY = -6; // small hop
-        this.dragon.onGround = false;
-
-        // Keep the dragon on the screen after the bounce
-        if (this.dragon.x < 0) this.dragon.x = 0;
+        this.dragon.velocityY = -6;
       }
     });
   }
