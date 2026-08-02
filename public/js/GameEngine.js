@@ -117,8 +117,8 @@ export class GameEngine {
     // Cute two-frame bob animation
     this.dragon.updateAnimation(delta);
 
-    // Update enemies
-    this.level.enemies.forEach((enemy) => enemy.update());
+    // Update enemies (pass delta for hoppers / timed motion)
+    this.level.enemies.forEach((enemy) => enemy.update(delta));
 
     // Dragon hits enemy → bounce back (non-harmful)
     this.level.enemies.forEach((enemy) => {
