@@ -10,40 +10,37 @@ import {
   isJumpPressed,
 } from './controls.js';
 
-const canvas = document.getElementById('gameCanvas');
+/** @type {HTMLCanvasElement | null} */
+let canvas = null;
+/** @type {CanvasRenderingContext2D | null} */
+let ctx = null;
 
-if (!(canvas instanceof HTMLCanvasElement)) {
-  throw new Error('Game canvas (#gameCanvas) not found');
+function bindCanvas() {
+  const el = document.getElementById('gameCanvas');
+  if (!(el instanceof HTMLCanvasElement)) {
+    throw new Error('Game canvas (#gameCanvas) not found');
+  }
+
+  canvas = el;
+  canvas.width = 960;
+  canvas.height = 540;
+  ctx = canvas.getContext('2d');
+
+  // Store ctx globally so screens/helpers can draw with it.
+  globalThis.ctx = ctx;
+  globalThis.canvas = canvas;
+
+  return { canvas, ctx };
 }
 
-// Logical game size
-canvas.width = 960;
-canvas.height = 540;
-
-/** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext('2d');
-
-// Store ctx globally so screens/helpers can draw with it.
-globalThis.ctx = ctx;
-globalThis.canvas = canvas;
-
 export class GameEngine {
-  /**
-   * @param {object} [options]
-   * @param {import('./Dragon.js').Dragon} [options.dragon]
-   * @param {import('./Platform.js').Platform[]} [options.platforms]
-   * @param {number} [options.groundY]
-   * @param {(dt: number) => void} [options.update]
-   * @param {() => void} [options.render]
-   */
-  constructor(options = {}) {
-    this.canvas = canvas;
-    this.ctx = ctx;
-    this.dragon = options.dragon ?? null;
-    this.platforms = options.platforms ?? [];
-    this.groundY = options.groundY ?? canvas.height - 72;
-    this.onUpdate = options.update ?? null;
-    this.onRender = options.render ?? null;
+  constructor() {
+    this.canvas = null;
+    this.ctx = null;
+    this.dragon = null;
+    this.level = null;
+    this.platforms = [];
+    this.groundY = 468;
 
     this._running = false;
     this._rafId = 0;
@@ -51,9 +48,27 @@ export class GameEngine {
     this._jumpLocked = false;
   }
 
-  /** Begin the animation loop. */
-  start() {
+  /**
+   * Begin the animation loop with a dragon and level.
+   * @param {import('./Dragon.js').Dragon} dragon
+   * @param {object} level
+   */
+  start(dragon, level) {
     if (this._running) return;
+
+    const bound = bindCanvas();
+    this.canvas = bound.canvas;
+    this.ctx = bound.ctx;
+
+    this.dragon = dragon;
+    this.level = level;
+    this.platforms = level?.platforms ?? [];
+    this.groundY = level?.groundY ?? this.canvas.height - 72;
+
+    if (dragon && level?.startPosition) {
+      dragon.groundY = this.groundY;
+    }
+
     this._running = true;
     startControls();
     this._lastTime = performance.now();
@@ -75,7 +90,7 @@ export class GameEngine {
    * @param {number} time
    */
   loop(time) {
-    if (!this._running) return;
+    if (!this._running || !ctx || !canvas) return;
 
     const dt = Math.min(0.05, (time - this._lastTime) / 1000);
     this._lastTime = time;
@@ -96,44 +111,39 @@ export class GameEngine {
    */
   update(dt) {
     const dragon = this.dragon;
+    if (!dragon || !canvas) return;
 
-    if (dragon) {
-      // Example: ArrowLeft → dragon.vx = -speed
-      dragon.vx = 0;
+    // Example: ArrowLeft → dragon.vx = -speed
+    dragon.vx = 0;
 
-      if (isLeftPressed()) {
-        dragon.vx = -dragon.speed;
-        dragon.facing = -1;
-      }
-      if (isRightPressed()) {
-        dragon.vx = dragon.speed;
-        dragon.facing = 1;
-      }
-
-      // On jump key: if dragon is on ground → vy = -jumpForce (no double jumps).
-      if (isJumpPressed()) {
-        if (!this._jumpLocked) {
-          dragon.jump();
-        }
-        this._jumpLocked = true;
-      } else {
-        this._jumpLocked = false;
-      }
-
-      const prevBottom = dragon.y + dragon.radius * 0.9;
-
-      dragon.update(dt, {
-        width: canvas.width,
-        groundY: this.groundY,
-      });
-
-      // Platform collision detection
-      this.resolvePlatformCollisions(dragon, prevBottom);
+    if (isLeftPressed()) {
+      dragon.vx = -dragon.speed;
+      dragon.facing = -1;
+    }
+    if (isRightPressed()) {
+      dragon.vx = dragon.speed;
+      dragon.facing = 1;
     }
 
-    if (typeof this.onUpdate === 'function') {
-      this.onUpdate(dt);
+    // On jump key: if dragon is on ground → vy = -jumpForce (no double jumps).
+    if (isJumpPressed()) {
+      if (!this._jumpLocked) {
+        dragon.jump();
+      }
+      this._jumpLocked = true;
+    } else {
+      this._jumpLocked = false;
     }
+
+    const prevBottom = dragon.y + dragon.radius * 0.9;
+
+    dragon.update(dt, {
+      width: canvas.width,
+      groundY: this.groundY,
+    });
+
+    // Platform collision detection
+    this.resolvePlatformCollisions(dragon, prevBottom);
   }
 
   /**
@@ -200,16 +210,56 @@ export class GameEngine {
     }
   }
 
-  /** Draw the current frame. */
+  /** Draw the current frame from the active level. */
   render() {
-    if (typeof this.onRender === 'function') {
-      this.onRender();
+    if (!ctx || !canvas || !this.level || !this.dragon) return;
+
+    this.drawLevelBackground();
+
+    for (const platform of this.platforms) {
+      platform.draw(ctx);
     }
 
-    // Draw platforms if the custom render did not already handle them.
-    // game.js draws them explicitly for layering control.
+    this.dragon.draw(ctx);
+  }
+
+  drawLevelBackground() {
+    if (!ctx || !canvas || !this.level) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const level = this.level;
+    const groundY = this.groundY;
+    const bg = level.backgroundColor || '#7ec8ff';
+
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, bg);
+    sky.addColorStop(0.55, '#b8f0ff');
+    sky.addColorStop(1, '#fff6b0');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = level.hillColor || '#7adf8a';
+    ctx.beginPath();
+    ctx.moveTo(0, groundY - 20);
+    ctx.quadraticCurveTo(width * 0.25, groundY - 90, width * 0.5, groundY - 30);
+    ctx.quadraticCurveTo(width * 0.75, groundY + 20, width, groundY - 50);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = level.groundColor || '#5ecf6e';
+    ctx.fillRect(0, groundY, width, height - groundY);
+    ctx.fillStyle = level.groundTopColor || '#f4d35e';
+    ctx.fillRect(0, groundY, width, 10);
+
+    ctx.fillStyle = '#ffe566';
+    ctx.beginPath();
+    ctx.arc(width - 90, 70, 40, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
-export { canvas, ctx };
+export { bindCanvas };
 export default GameEngine;

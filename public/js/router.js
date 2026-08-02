@@ -1,6 +1,6 @@
 /**
  * Tiny client-side router for Dragon Adventure!
- * Loads screen HTML into #app, then runs that screen's JS file.
+ * Injects screen HTML into #app, THEN loads that screen's JS file.
  */
 
 const routes = {
@@ -10,6 +10,9 @@ const routes = {
   pause: 'screens/pause.html',
   settings: 'screens/settings.html',
 };
+
+/** Screen scripts that use ES module imports. */
+const moduleRoutes = new Set(['game']);
 
 async function loadRoute(routeName) {
   const path = routes[routeName];
@@ -24,14 +27,22 @@ async function loadRoute(routeName) {
     window.__stopAdventure = null;
   }
 
+  // 1) Fetch + inject HTML first so #gameCanvas (etc.) exist in the DOM.
   const html = await fetch(path).then((res) => res.text());
-  document.getElementById('app').innerHTML = html;
+  const app = document.getElementById('app');
+  if (!app) {
+    console.error('#app not found');
+    return;
+  }
+  app.innerHTML = html;
 
-  // After loading HTML, load its JS file
+  // 2) AFTER HTML is in the page, load the screen's JS.
   const script = document.createElement('script');
-  script.src = `js/${routeName}.js`;
-  // Bust cache so re-visiting a screen re-runs setup code.
-  script.src += `?t=${Date.now()}`;
+  if (moduleRoutes.has(routeName)) {
+    script.type = 'module';
+  }
+  // Cache-bust so re-visiting a screen re-runs setup code.
+  script.src = `js/${routeName}.js?t=${Date.now()}`;
   document.body.appendChild(script);
 }
 
