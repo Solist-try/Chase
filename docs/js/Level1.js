@@ -22,9 +22,9 @@ export class Level1 {
 
     // Stars + coins the dragon can pick up
     this.collectibles = [
-      { x: 100, y: canvas.height - 150, type: 'star', radius: 10, collected: false },
-      { x: 300, y: canvas.height - 230, type: 'star', radius: 10, collected: false },
-      { x: 480, y: canvas.height - 190, type: 'star', radius: 10, collected: false },
+      { x: 100, y: canvas.height - 150, type: 'star', radius: 14, collected: false },
+      { x: 300, y: canvas.height - 230, type: 'star', radius: 14, collected: false },
+      { x: 480, y: canvas.height - 190, type: 'star', radius: 14, collected: false },
       { x: 200, y: canvas.height - 90, type: 'coin', radius: 8, collected: false },
       { x: 360, y: canvas.height - 220, type: 'coin', radius: 8, collected: false },
       { x: 520, y: canvas.height - 90, type: 'coin', radius: 8, collected: false },

@@ -3,6 +3,8 @@
 // Clean, readable, kid-friendly logic
 // ---------------------------------------------------------
 
+import { drawStarCollectible, loadStarSprite } from './starSprite.js';
+
 export class GameEngine {
   constructor(canvas, level, dragon, controls) {
     this.canvas = canvas;
@@ -13,7 +15,11 @@ export class GameEngine {
     this.controls = controls;
 
     this.lastTime = 0;
+    this.animTime = 0;
     this.gravity = 0.4; // gentle gravity for kids
+
+    // Warm the cute star sprite cache
+    loadStarSprite();
 
     // Prefer the full-width ground platform from the level when present.
     const ground =
@@ -55,6 +61,7 @@ export class GameEngine {
 
     const delta = timestamp - this.lastTime;
     this.lastTime = timestamp;
+    this.animTime += delta;
 
     this.update(delta);
     this.render();
@@ -232,7 +239,8 @@ export class GameEngine {
     });
 
     // Draw remaining collectibles
-    this.level.collectibles.forEach((c) => {
+    const twinklePhase = (this.animTime % 1600) / 1600;
+    this.level.collectibles.forEach((c, index) => {
       if (c.collected) return;
       const radius = c.radius || 10;
 
@@ -245,19 +253,9 @@ export class GameEngine {
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
       } else {
-        // Simple star-like sparkle (bright yellow circle + cross)
-        this.ctx.fillStyle = '#ffe566';
-        this.ctx.beginPath();
-        this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#fffaf0';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(c.x - radius, c.y);
-        this.ctx.lineTo(c.x + radius, c.y);
-        this.ctx.moveTo(c.x, c.y - radius);
-        this.ctx.lineTo(c.x, c.y + radius);
-        this.ctx.stroke();
+        // Cute shiny 5-point star sprite (with drawn fallback)
+        const phase = (twinklePhase + index * 0.18) % 1;
+        drawStarCollectible(this.ctx, c.x, c.y, radius, phase);
       }
     });
 
