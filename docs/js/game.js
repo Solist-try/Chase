@@ -122,7 +122,7 @@ window.startDragonGame = function (forceRestart = false) {
   canvas.height = 360;
 
   // Create game objects
-  const dragon = new Dragon(50, canvas.height - 100);
+  const dragon = new Dragon(50, canvas.height - 88);
   controls = new Controls();
   const level = new Level1(canvas);
 

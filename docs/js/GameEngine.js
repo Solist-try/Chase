@@ -82,8 +82,14 @@ export class GameEngine {
     const moveSpeed = this.controls.dash
       ? this.dragon.speed * 1.75
       : this.dragon.speed;
-    if (this.controls.left) this.dragon.x -= moveSpeed;
-    if (this.controls.right) this.dragon.x += moveSpeed;
+    if (this.controls.left) {
+      this.dragon.x -= moveSpeed;
+      this.dragon.facing = -1;
+    }
+    if (this.controls.right) {
+      this.dragon.x += moveSpeed;
+      this.dragon.facing = 1;
+    }
 
     // Keep the dragon on the screen
     if (this.dragon.x < 0) this.dragon.x = 0;

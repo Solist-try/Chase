@@ -1,7 +1,39 @@
 // ---------------------------------------------------------
 // Dragon Adventure – Dragon Character
-// Simple, readable, rainbow-friendly logic
+// Mint-green baby dragon sprite (kid-friendly)
 // ---------------------------------------------------------
+
+const SPRITE_SRC = 'assets/baby-dragon-sprite.png';
+
+/** Shared image so we only load the sprite once. */
+let sharedSprite = null;
+let sharedSpriteLoading = null;
+
+function loadDragonSprite() {
+  if (sharedSprite?.complete && sharedSprite.naturalWidth > 0) {
+    return Promise.resolve(sharedSprite);
+  }
+  if (sharedSpriteLoading) return sharedSpriteLoading;
+
+  sharedSpriteLoading = new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      sharedSprite = img;
+      resolve(img);
+    };
+    img.onerror = () => {
+      console.warn('Dragon sprite failed to load — using drawn fallback');
+      sharedSprite = null;
+      resolve(null);
+    };
+    img.src = SPRITE_SRC;
+  });
+
+  return sharedSpriteLoading;
+}
+
+// Kick off load as soon as this module is imported.
+loadDragonSprite();
 
 export class Dragon {
   constructor(startX, startY) {
@@ -9,56 +41,143 @@ export class Dragon {
     this.x = startX;
     this.y = startY;
 
-    // Size (friendly, visible)
-    this.width = 40;
-    this.height = 40;
+    // Hitbox size (sprite draws a bit larger around it)
+    this.width = 48;
+    this.height = 48;
 
     // Movement
-    this.speed = 3; // gentle speed for kids
+    this.speed = 3;
     this.velocityY = 0;
 
     // State
     this.onGround = false;
+    this.facing = 1; // 1 = right, -1 = left
 
-    // Appearance
-    this.color = 'rgb(255, 100, 200)'; // cute pinkish dragon (can be changed)
+    // Appearance (used by drawn fallback)
+    this.color = '#6fd6b0';
 
-    // Animation placeholder
+    // Animation
     this.frame = 0;
     this.frameTimer = 0;
+
+    this.sprite = sharedSprite;
+    loadDragonSprite().then((img) => {
+      this.sprite = img;
+    });
   }
 
   updateAnimation(delta) {
-    // Simple frame switcher (placeholder)
     this.frameTimer += delta;
-    if (this.frameTimer > 150) {
-      this.frame = (this.frame + 1) % 2; // two-frame animation
+    if (this.frameTimer > 180) {
+      this.frame = (this.frame + 1) % 2;
       this.frameTimer = 0;
     }
   }
 
   draw(ctx) {
-    // Tiny bob when the animation frame flips
     const bob = this.frame === 0 ? 0 : 2;
+    const drawW = this.width * 1.35;
+    const drawH = this.height * 1.35;
+    const drawX = this.x + this.width / 2 - drawW / 2;
+    const drawY = this.y + this.height - drawH + bob;
 
-    // Simple rectangle dragon (replace with sprite later)
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y + bob, this.width, this.height);
+    if (this.sprite && this.sprite.complete && this.sprite.naturalWidth > 0) {
+      ctx.save();
+      // Flip horizontally when facing left
+      if (this.facing < 0) {
+        ctx.translate(drawX + drawW, drawY);
+        ctx.scale(-1, 1);
+        ctx.drawImage(this.sprite, 0, 0, drawW, drawH);
+      } else {
+        ctx.drawImage(this.sprite, drawX, drawY, drawW, drawH);
+      }
+      ctx.restore();
+      return;
+    }
 
-    // Cute eyes
-    ctx.fillStyle = 'white';
-    ctx.fillRect(this.x + 8, this.y + 10 + bob, 8, 8);
-    ctx.fillRect(this.x + 24, this.y + 10 + bob, 8, 8);
+    // Fallback: simple mint dragon if the image is still loading / missing
+    this.#drawFallback(ctx, bob);
+  }
 
-    ctx.fillStyle = 'black';
-    ctx.fillRect(this.x + 11, this.y + 13 + bob, 4, 4);
-    ctx.fillRect(this.x + 27, this.y + 13 + bob, 4, 4);
+  #drawFallback(ctx, bob) {
+    const x = this.x;
+    const y = this.y + bob;
+    const w = this.width;
+    const h = this.height;
+    const cx = x + w / 2;
 
-    // Tiny smile
-    ctx.strokeStyle = 'black';
+    ctx.save();
+    if (this.facing < 0) {
+      ctx.translate(cx, 0);
+      ctx.scale(-1, 1);
+      ctx.translate(-cx, 0);
+    }
+
+    // Tail
+    ctx.fillStyle = '#45a898';
     ctx.beginPath();
-    ctx.arc(this.x + 20, this.y + 25 + bob, 8, 0, Math.PI);
-    ctx.stroke();
+    ctx.moveTo(x + w * 0.15, y + h * 0.55);
+    ctx.quadraticCurveTo(x - 8, y + h * 0.4, x + 4, y + h * 0.2);
+    ctx.quadraticCurveTo(x + 10, y + h * 0.45, x + w * 0.25, y + h * 0.65);
+    ctx.fill();
+
+    // Wing
+    ctx.fillStyle = '#c9b6f2';
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.35, y + h * 0.35);
+    ctx.quadraticCurveTo(x + w * 0.1, y + h * 0.05, x + w * 0.45, y + h * 0.15);
+    ctx.quadraticCurveTo(x + w * 0.55, y + h * 0.25, x + w * 0.4, y + h * 0.4);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.ellipse(cx, y + h * 0.58, w * 0.32, h * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Belly
+    ctx.fillStyle = '#e8d4f0';
+    ctx.beginPath();
+    ctx.ellipse(cx + 2, y + h * 0.62, w * 0.16, h * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.ellipse(cx + 4, y + h * 0.28, w * 0.28, h * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#2b1b4a';
+    ctx.beginPath();
+    ctx.arc(cx + 10, y + h * 0.26, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx + 12, y + h * 0.24, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snout
+    ctx.fillStyle = '#7fe0c0';
+    ctx.beginPath();
+    ctx.ellipse(cx + 16, y + h * 0.34, 7, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horn
+    ctx.fillStyle = '#f7f7f7';
+    ctx.beginPath();
+    ctx.moveTo(cx - 2, y + 4);
+    ctx.lineTo(cx + 4, y + 14);
+    ctx.lineTo(cx - 6, y + 14);
+    ctx.closePath();
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = '#45a898';
+    ctx.fillRect(x + w * 0.28, y + h * 0.78, 8, 10);
+    ctx.fillRect(x + w * 0.55, y + h * 0.78, 8, 10);
+
+    ctx.restore();
   }
 }
 
