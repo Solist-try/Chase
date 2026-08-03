@@ -207,9 +207,10 @@ body {
 }
 
 .hud__icon--coin {
-  color: #083d5c;
-  background: radial-gradient(circle at 35% 30%, #c9f7ff, var(--sky) 55%, #3db8e8);
-  box-shadow: 0 0 0 2px #fff3, 0 2px 0 rgba(27, 42, 74, 0.12);
+  color: transparent;
+  background: url('../assets/coin-sprite.png') center / contain no-repeat;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .hud__stat--hearts {

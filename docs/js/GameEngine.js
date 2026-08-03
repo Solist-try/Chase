@@ -3,7 +3,7 @@
 // Clean, readable, kid-friendly logic
 // ---------------------------------------------------------
 
-import { drawStarCollectible, loadStarSprite } from './starSprite.js';
+import { drawStarCollectible, drawCoinCollectible, loadStarSprite, loadCoinSprite } from './starSprite.js';
 
 export class GameEngine {
   constructor(canvas, level, dragon, controls) {
@@ -18,8 +18,9 @@ export class GameEngine {
     this.animTime = 0;
     this.gravity = 0.4; // gentle gravity for kids
 
-    // Warm the cute star sprite cache
+    // Warm the collectible sprite caches
     loadStarSprite();
+    loadCoinSprite();
 
     // Prefer the full-width ground platform from the level when present.
     const ground =
@@ -245,13 +246,8 @@ export class GameEngine {
       const radius = c.radius || 10;
 
       if (c.type === 'coin') {
-        this.ctx.fillStyle = '#ffd166';
-        this.ctx.beginPath();
-        this.ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#c98a00';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
+        const phase = (twinklePhase + index * 0.11) % 1;
+        drawCoinCollectible(this.ctx, c.x, c.y, radius, phase);
       } else {
         // Cute shiny 5-point star sprite (with drawn fallback)
         const phase = (twinklePhase + index * 0.18) % 1;
