@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Placeholder: collectible heart -->
+  <path
+    d="M16 28 C16 28 4 19 4 12 C4 7.5 7.5 5 11 5 C13.5 5 15.2 6.4 16 8 C16.8 6.4 18.5 5 21 5 C24.5 5 28 7.5 28 12 C28 19 16 28 16 28Z"
+    fill="#FF6B8A"
+    stroke="#1B2A4A"
+    stroke-width="1.5"
+    stroke-linejoin="round"
+  />
+</svg>

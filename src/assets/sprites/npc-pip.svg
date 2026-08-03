@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <!-- Placeholder: guide NPC Pip -->
+  <rect width="48" height="48" rx="14" fill="#5B8DEF"/>
+  <circle cx="18" cy="18" r="3" fill="#1B2A4A"/>
+  <circle cx="30" cy="18" r="3" fill="#1B2A4A"/>
+  <path d="M16 28 Q24 36 32 28" stroke="#1B2A4A" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

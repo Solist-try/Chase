@@ -1,0 +1,295 @@
+/* Dragon Adventure — home styles for young explorers (~age 8) */
+
+:root {
+  --ink: #1b2a4a;
+  --paper: #fffaf0;
+  --start: #ffd166;
+  --settings: #9bf6ff;
+  --done: #80ed99;
+  --berry: #ff4d6d;
+  --mango: #ff9f1c;
+  --lemon: #ffe566;
+  --mint: #80ed99;
+  --sky: #00bbf9;
+  --grape: #b5179e;
+  --pink: #f72585;
+
+  --font-display: 'Fredoka', 'Nunito', sans-serif;
+  --font-body: 'Nunito', 'Fredoka', sans-serif;
+
+  --shadow-soft: 0 8px 20px rgba(27, 42, 74, 0.12);
+  --shadow-button: 0 8px 0 rgba(27, 42, 74, 0.12), 0 12px 24px rgba(27, 42, 74, 0.1);
+  --shadow-button-press: 0 3px 0 rgba(27, 42, 74, 0.12), 0 6px 14px rgba(27, 42, 74, 0.1);
+  --radius-button: 999px;
+  --radius-panel: 1.5rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  /* Bright rainbow gradient background */
+  background:
+    radial-gradient(ellipse 55% 40% at 12% 10%, rgba(255, 77, 109, 0.35), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 88% 14%, rgba(0, 187, 249, 0.4), transparent 52%),
+    radial-gradient(ellipse 45% 35% at 50% 0%, rgba(255, 209, 102, 0.45), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 70% 85%, rgba(128, 237, 153, 0.35), transparent 55%),
+    linear-gradient(
+      135deg,
+      #ff6b8a 0%,
+      #ff9f1c 18%,
+      #ffe566 36%,
+      #80ed99 54%,
+      #00bbf9 72%,
+      #7ec8e3 88%,
+      #b8f2c8 100%
+    );
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  animation: sky-shift 12s ease-in-out infinite alternate;
+}
+
+.page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1.35rem;
+  padding: clamp(1.25rem, 4vw, 2.75rem);
+  text-align: center;
+}
+
+.page::before,
+.page::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(2px);
+  opacity: 0.45;
+}
+
+.page::before {
+  width: min(42vw, 220px);
+  height: min(42vw, 220px);
+  top: 6%;
+  right: 4%;
+  background: rgba(255, 250, 240, 0.55);
+  animation: float-blob 7s ease-in-out infinite;
+}
+
+.page::after {
+  width: min(34vw, 170px);
+  height: min(34vw, 170px);
+  bottom: 8%;
+  left: 5%;
+  background: rgba(255, 214, 120, 0.4);
+  animation: float-blob 8.5s ease-in-out infinite reverse;
+}
+
+/* Playful typography */
+.hero {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 10vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 0 rgba(255, 250, 240, 0.55);
+}
+
+.title span {
+  display: inline-block;
+  animation: bounce-letter 1.8s ease-in-out infinite;
+}
+
+.title span:nth-child(1) { color: var(--berry); animation-delay: 0s; }
+.title span:nth-child(2) { color: var(--mango); animation-delay: 0.05s; }
+.title span:nth-child(3) { color: var(--lemon); animation-delay: 0.1s; }
+.title span:nth-child(4) { color: var(--mint); animation-delay: 0.15s; }
+.title span:nth-child(5) { color: var(--sky); animation-delay: 0.2s; }
+.title span:nth-child(6) { color: var(--grape); animation-delay: 0.25s; }
+.title span:nth-child(7) { color: var(--pink); animation-delay: 0.3s; }
+.title .space { width: 0.35em; }
+.title span:nth-child(9) { color: var(--berry); animation-delay: 0.4s; }
+.title span:nth-child(10) { color: var(--mango); animation-delay: 0.45s; }
+.title span:nth-child(11) { color: var(--lemon); animation-delay: 0.5s; }
+.title span:nth-child(12) { color: var(--mint); animation-delay: 0.55s; }
+.title span:nth-child(13) { color: var(--sky); animation-delay: 0.6s; }
+.title span:nth-child(14) { color: var(--grape); animation-delay: 0.65s; }
+.title span:nth-child(15) { color: var(--pink); animation-delay: 0.7s; }
+.title span:nth-child(16) { color: var(--berry); animation-delay: 0.75s; }
+
+.tagline {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+  color: var(--ink);
+  background: rgba(255, 250, 240, 0.72);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+
+.mascot {
+  margin: 0.35rem 0;
+  max-width: 100%;
+}
+
+.mascot img,
+.mascot svg {
+  display: block;
+  width: min(280px, 72vw);
+  height: auto;
+  margin-inline: auto;
+  filter: drop-shadow(0 14px 18px rgba(27, 42, 74, 0.16));
+  animation: bob 2.8s ease-in-out infinite;
+}
+
+.mascot figcaption {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: rgba(27, 42, 74, 0.78);
+  background: rgba(255, 250, 240, 0.65);
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Large rounded buttons + soft shadows */
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-button);
+  min-width: 12rem;
+  min-height: 3.4rem;
+  padding: 1.05rem 1.75rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-button);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--shadow-button-press);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.btn--start {
+  background: linear-gradient(180deg, #ffe08a 0%, var(--start) 55%, #f4b942 100%);
+}
+
+.btn--settings {
+  background: linear-gradient(180deg, #c9f7ff 0%, var(--settings) 55%, #7ad7e8 100%);
+}
+
+.settings {
+  width: min(100%, 22rem);
+  padding: 1.15rem 1.25rem 1.2rem;
+  border-radius: var(--radius-panel);
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+}
+
+.settings[hidden] {
+  display: none;
+}
+
+.settings h2 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.settings p {
+  margin: 0 0 0.95rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: rgba(27, 42, 74, 0.8);
+}
+
+.settings .btn {
+  min-width: auto;
+  width: 100%;
+  background: linear-gradient(180deg, #a8f5b8 0%, var(--done) 55%, #5fd67d 100%);
+}
+
+@keyframes bounce-letter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float-blob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes sky-shift {
+  from { filter: saturate(1) brightness(1); }
+  to { filter: saturate(1.12) brightness(1.03); }
+}
+
+@media (max-width: 420px) {
+  .actions {
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    font-size: 1.25rem;
+  }
+}
