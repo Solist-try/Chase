@@ -53,22 +53,31 @@ export function drawStarShape(ctx, x, y, radius, rotation = 0) {
   }
   ctx.closePath();
 
-  const gradient = ctx.createRadialGradient(0, -radius * 0.2, 1, 0, 0, radius);
-  gradient.addColorStop(0, '#fff6a8');
-  gradient.addColorStop(0.45, '#ffd166');
-  gradient.addColorStop(1, '#f4a261');
-  ctx.fillStyle = gradient;
+  // Bright yellow fill like the reference art
+  ctx.fillStyle = '#ffe014';
   ctx.fill();
 
-  ctx.strokeStyle = '#c98a00';
-  ctx.lineWidth = Math.max(1.5, radius * 0.12);
+  // Mustard inner bevel
+  ctx.strokeStyle = '#e0a800';
+  ctx.lineWidth = Math.max(2, radius * 0.14);
   ctx.lineJoin = 'round';
   ctx.stroke();
 
-  // Gloss highlight
-  ctx.fillStyle = 'rgba(255, 250, 240, 0.55)';
+  // Thick dark brown outline
+  ctx.strokeStyle = '#5c2a1a';
+  ctx.lineWidth = Math.max(2.5, radius * 0.2);
+  ctx.stroke();
+
+  // Glossy white highlight dashes (upper-left / mid-left / bottom-left)
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.ellipse(-radius * 0.2, -radius * 0.25, radius * 0.22, radius * 0.14, -0.5, 0, Math.PI * 2);
+  ctx.ellipse(-radius * 0.18, -radius * 0.42, radius * 0.1, radius * 0.22, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-radius * 0.42, -radius * 0.05, radius * 0.08, radius * 0.14, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-radius * 0.22, radius * 0.28, radius * 0.09, radius * 0.16, 0.4, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
