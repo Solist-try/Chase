@@ -132,30 +132,31 @@ export function drawStarCollectible(ctx, x, y, radius, twinklePhase = 0) {
   drawStarShape(ctx, x, y + bob, radius * 1.15 * scale, spin);
 }
 
-/** Silver dragon-coin fallback if the sprite is missing. */
+/** Gold dragon-coin fallback if the sprite is missing. */
 export function drawCoinShape(ctx, x, y, radius) {
   ctx.save();
   ctx.translate(x, y);
 
-  // Outer silver disc
+  // Outer gold disc
   const metal = ctx.createRadialGradient(-radius * 0.3, -radius * 0.35, 1, 0, 0, radius);
-  metal.addColorStop(0, '#f5f7fa');
-  metal.addColorStop(0.55, '#c5ccd6');
-  metal.addColorStop(1, '#8a93a1');
+  metal.addColorStop(0, '#fff3b0');
+  metal.addColorStop(0.45, '#ffd166');
+  metal.addColorStop(0.75, '#e8a820');
+  metal.addColorStop(1, '#b8860b');
   ctx.beginPath();
   ctx.arc(0, 0, radius, 0, Math.PI * 2);
   ctx.fillStyle = metal;
   ctx.fill();
 
-  // Dark rim
-  ctx.strokeStyle = '#5a6270';
+  // Dark gold rim
+  ctx.strokeStyle = '#8a5a10';
   ctx.lineWidth = Math.max(2, radius * 0.14);
   ctx.stroke();
 
   // Inner ornate ring
   ctx.beginPath();
   ctx.arc(0, 0, radius * 0.78, 0, Math.PI * 2);
-  ctx.strokeStyle = '#9aa3b0';
+  ctx.strokeStyle = '#d4a017';
   ctx.lineWidth = Math.max(1.5, radius * 0.1);
   ctx.stroke();
 
@@ -179,7 +180,7 @@ export function drawCoinShape(ctx, x, y, radius) {
   ctx.fill();
 
   // Specular shine on rim
-  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
   ctx.lineWidth = Math.max(1.5, radius * 0.08);
   ctx.beginPath();
   ctx.arc(-radius * 0.1, -radius * 0.1, radius * 0.72, -2.4, -1.1);
@@ -189,7 +190,7 @@ export function drawCoinShape(ctx, x, y, radius) {
 }
 
 /**
- * Draw a silver dragon-coin collectible.
+ * Draw a gold dragon-coin collectible.
  * @param {number} twinklePhase 0–1 animation phase
  */
 export function drawCoinCollectible(ctx, x, y, radius, twinklePhase = 0) {
