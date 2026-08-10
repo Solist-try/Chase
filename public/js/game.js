@@ -50,6 +50,12 @@ function setWinOverlay(visible) {
   overlay.hidden = !visible;
 }
 
+function setLoseOverlay(visible) {
+  const overlay = document.getElementById('loseOverlay');
+  if (!overlay) return;
+  overlay.hidden = !visible;
+}
+
 function wirePauseUi() {
   const pauseBtn = document.getElementById('pauseBtn');
   const resumeBtn = document.getElementById('resumeBtn');
@@ -58,6 +64,8 @@ function wirePauseUi() {
   const winAgainBtn = document.getElementById('winAgainBtn');
   const winHomeBtn = document.getElementById('winHomeBtn');
   const winNextBtn = document.getElementById('winNextBtn');
+  const loseAgainBtn = document.getElementById('loseAgainBtn');
+  const loseHomeBtn = document.getElementById('loseHomeBtn');
 
   if (pauseBtn) {
     pauseBtn.onclick = () => {
@@ -78,6 +86,7 @@ function wirePauseUi() {
     restartBtn.onclick = () => {
       setPauseOverlay(false);
       setWinOverlay(false);
+      setLoseOverlay(false);
       // Restart the same level
       window.startDragonGame(currentLevelClass);
     };
@@ -106,6 +115,19 @@ function wirePauseUi() {
   if (winNextBtn) {
     winNextBtn.onclick = () => {
       window.navigateTo('level2');
+    };
+  }
+
+  if (loseAgainBtn) {
+    loseAgainBtn.onclick = () => {
+      setLoseOverlay(false);
+      window.startDragonGame(currentLevelClass);
+    };
+  }
+
+  if (loseHomeBtn) {
+    loseHomeBtn.onclick = () => {
+      window.navigateTo('home');
     };
   }
 }
@@ -163,11 +185,17 @@ window.startDragonGame = function (LevelClass = Level1) {
   showGameUi(level);
   setPauseOverlay(false);
   setWinOverlay(false);
+  setLoseOverlay(false);
   wirePauseUi();
 
   // When the level is cleared, show Play again / Home
   engine.onWin = () => {
     setWinOverlay(true);
+  };
+
+  // Special foe touched the dragon twice
+  engine.onLose = () => {
+    setLoseOverlay(true);
   };
 
   engine.start();
