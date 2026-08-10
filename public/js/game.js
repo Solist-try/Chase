@@ -50,10 +50,18 @@ function setWinOverlay(visible) {
   overlay.hidden = !visible;
 }
 
-function setLoseOverlay(visible) {
+function setLoseOverlay(visible, reason = 'foe') {
   const overlay = document.getElementById('loseOverlay');
   if (!overlay) return;
   overlay.hidden = !visible;
+
+  const message = overlay.querySelector('p');
+  if (message && visible) {
+    message.textContent =
+      reason === 'void'
+        ? 'You fell into the void! Watch your step next time.'
+        : 'The special foe touched you twice. Jump on its head next time!';
+  }
 }
 
 function wirePauseUi() {
@@ -193,9 +201,9 @@ window.startDragonGame = function (LevelClass = Level1) {
     setWinOverlay(true);
   };
 
-  // Special foe touched the dragon twice
-  engine.onLose = () => {
-    setLoseOverlay(true);
+  // Dragon lost — void fall or special foe
+  engine.onLose = (reason) => {
+    setLoseOverlay(true, reason);
   };
 
   engine.start();
