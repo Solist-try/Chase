@@ -238,6 +238,13 @@ body {
   animation-delay: 0.4s;
 }
 
+.hud__heart.is-empty {
+  color: rgba(27, 42, 74, 0.22);
+  text-shadow: none;
+  animation: none;
+  filter: grayscale(1);
+}
+
 .hud__pause {
   appearance: none;
   border: 3px solid var(--ink);

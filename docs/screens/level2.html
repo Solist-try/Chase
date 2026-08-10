@@ -13,6 +13,10 @@
     </div>
 
     <div class="hud__meters">
+      <div class="hud__stat hud__stat--hearts" aria-label="Hearts" id="heartMeter">
+        <span class="hud__heart" aria-hidden="true">♥</span>
+        <span class="hud__heart" aria-hidden="true">♥</span>
+      </div>
       <div class="hud__stat" aria-label="Stars">
         <span class="hud__icon hud__icon--star" aria-hidden="true"></span>
         <span id="starCount" class="hud__stat-value">0</span>
@@ -53,6 +57,19 @@
         Play again
       </button>
       <button id="winHomeBtn" class="win-menu__btn win-menu__btn--home" type="button">
+        Home
+      </button>
+    </div>
+  </div>
+
+  <div id="loseOverlay" class="win-menu" hidden>
+    <h2>Oh no!</h2>
+    <p>The special foe touched you twice. Jump on its head next time!</p>
+    <div class="win-menu__actions">
+      <button id="loseAgainBtn" class="win-menu__btn win-menu__btn--again" type="button">
+        Try again
+      </button>
+      <button id="loseHomeBtn" class="win-menu__btn win-menu__btn--home" type="button">
         Home
       </button>
     </div>

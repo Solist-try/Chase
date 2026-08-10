@@ -14,7 +14,8 @@ export class Level2 {
     this.background =
       'linear-gradient(135deg, #ff4d6d 0%, #ff9f1c 18%, #ffe566 36%, #80ed99 54%, #00bbf9 72%, #b5179e 100%)';
 
-    this.goalText = 'Ride the moving platform and clear the special foe!';
+    this.goalText =
+      'Jump on the pink foe to beat it — but 2 touches and you’re out!';
 
     const groundY = canvas.height - 40;
 

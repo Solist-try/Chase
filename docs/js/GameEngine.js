@@ -31,8 +31,14 @@ export class GameEngine {
 
     this.running = false;
     this.won = false;
+    this.lost = false;
     this.onWin = null;
+    this.onLose = null;
     this._jumpLocked = false;
+
+    // Special foe can touch the dragon twice — then the dragon is out
+    this.hearts = 2;
+    this.hurtCooldown = 0; // brief invincible time after a hit
 
     this.starsCollected = 0;
     this.coinsCollected = 0;
@@ -45,6 +51,7 @@ export class GameEngine {
       coinCount: document.getElementById('coinCount'),
       coinTotal: document.querySelector('#gameHud .hud__stat[aria-label="Coins"] .hud__stat-total'),
       levelGoal: document.getElementById('levelGoal'),
+      hearts: document.getElementById('heartMeter'),
     };
 
     this.updateHud();
@@ -71,8 +78,14 @@ export class GameEngine {
   }
 
   update(delta) {
-    // After a win, keep drawing but stop gameplay updates.
-    if (this.won) return;
+    // After a win or loss, keep drawing but stop gameplay updates.
+    if (this.won || this.lost) return;
+
+    // Count down hurt invincibility
+    if (this.hurtCooldown > 0) {
+      this.hurtCooldown -= delta;
+      if (this.hurtCooldown < 0) this.hurtCooldown = 0;
+    }
 
     // Level-specific logic (e.g. Level 2 moving platform)
     if (typeof this.level.update === 'function') {
@@ -182,7 +195,7 @@ export class GameEngine {
     this.level.enemies.forEach((enemy) => enemy.update(delta));
 
     // ---------------------------
-    // Dragon stomp + soft bump
+    // Dragon stomp + foe touches
     // ---------------------------
     this.level.enemies.forEach((enemy) => {
       // Skip foes that were already defeated (alive === false)
@@ -195,36 +208,44 @@ export class GameEngine {
         this.dragon.x < enemy.x + enemy.width &&
         this.dragon.x + this.dragon.width > enemy.x;
 
-      // Landing on the enemy’s head while falling
+      // Landing on the enemy’s head while falling (a little forgiving for kids)
       const verticalStomp =
         dragonBottom > enemyTop &&
-        dragonBottom < enemyTop + 10 &&
-        this.dragon.velocityY > 0;
+        dragonBottom < enemyTop + 18 &&
+        this.dragon.velocityY > 0 &&
+        this.dragon.y + this.dragon.height * 0.45 < enemyTop + enemy.height;
 
-      // A) Stomp — defeat killable foes and bounce up
+      // A) Stomp — jump on a killable foe to defeat it
       if (
         horizontalOverlap &&
         verticalStomp &&
+        enemy.isKillable &&
         typeof enemy.defeat === 'function'
       ) {
         enemy.defeat();
-        this.dragon.velocityY = -10; // bounce up
+        this.dragon.velocityY = -10; // happy bounce up
+        this.dragon.y = enemyTop - this.dragon.height; // sit cleanly on top
+        if (this.hud.levelGoal) {
+          this.hud.levelGoal.textContent = 'Nice stomp! The special foe is gone!';
+        }
         return;
       }
 
-      // B) Side bump — only if we are actually touching the body
+      // B) Body touch — special foe hurts the dragon (2 touches = out)
       const bodyOverlap =
-        dragonBottom > enemy.y &&
-        this.dragon.y < enemy.y + enemy.height;
+        dragonBottom > enemy.y + 4 &&
+        this.dragon.y < enemy.y + enemy.height - 4;
 
-      if (
-        enemy.alive !== false &&
-        horizontalOverlap &&
-        bodyOverlap &&
-        !verticalStomp
-      ) {
-        this.dragon.x -= 20 * this.dragon.speed;
-        this.dragon.velocityY = -6;
+      if (!horizontalOverlap || !bodyOverlap || verticalStomp) return;
+
+      // Soft knockback for every foe
+      const push = this.dragon.x < enemy.x ? -1 : 1;
+      this.dragon.x += push * 18;
+      this.dragon.velocityY = -6;
+
+      // Only the special killable foe uses the 2-hit rule
+      if (enemy.isKillable && this.hurtCooldown <= 0) {
+        this.#hurtBySpecialFoe();
       }
     });
 
@@ -232,6 +253,34 @@ export class GameEngine {
     // Collectibles pickup + HUD
     // ---------------------------
     this.collectPickups();
+  }
+
+  /** Special foe touched the dragon — lose one heart. Two hits = lose. */
+  #hurtBySpecialFoe() {
+    this.hearts -= 1;
+    this.hurtCooldown = 1200; // invincible for a short moment
+    this.dragon.hurtFlash = 400; // blink pink briefly
+    this.updateHud();
+
+    if (this.hud.levelGoal) {
+      this.hud.levelGoal.textContent =
+        this.hearts <= 0
+          ? 'Oh no! The special foe got you!'
+          : 'Ouch! One more touch and you’re out!';
+    }
+
+    if (this.hearts <= 0) {
+      this.#loseGame();
+    }
+  }
+
+  #loseGame() {
+    if (this.lost || this.won) return;
+    this.lost = true;
+    this.running = false;
+    if (typeof this.onLose === 'function') {
+      this.onLose();
+    }
   }
 
   collectPickups() {
@@ -283,9 +332,17 @@ export class GameEngine {
     if (this.hud.coinTotal) {
       this.hud.coinTotal.textContent = `/${this.coinsTotal}`;
     }
-    if (this.hud.levelGoal && !this.won) {
+    if (this.hud.levelGoal && !this.won && !this.lost && this.hurtCooldown <= 0) {
       this.hud.levelGoal.textContent =
         this.level.goalText || 'Collect every star and coin!';
+    }
+
+    // Hearts for the special-foe 2-hit rule (Level 2)
+    if (this.hud.hearts) {
+      const icons = this.hud.hearts.querySelectorAll('.hud__heart');
+      icons.forEach((heart, index) => {
+        heart.classList.toggle('is-empty', index >= this.hearts);
+      });
     }
   }
 
@@ -320,8 +377,15 @@ export class GameEngine {
     // but still shows a short “poof” flash after a stomp)
     this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
-    // Draw dragon (eyes + smile live in Dragon.draw)
-    this.dragon.draw(this.ctx);
+    // Draw dragon (blink when hurt)
+    if (this.hurtCooldown > 0 && Math.floor(this.animTime / 80) % 2 === 0) {
+      this.ctx.save();
+      this.ctx.globalAlpha = 0.45;
+      this.dragon.draw(this.ctx);
+      this.ctx.restore();
+    } else {
+      this.dragon.draw(this.ctx);
+    }
 
     // Win banner
     if (this.won) {
