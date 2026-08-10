@@ -74,6 +74,11 @@ export class GameEngine {
     // After a win, keep drawing but stop gameplay updates.
     if (this.won) return;
 
+    // Level-specific logic (e.g. Level 2 moving platform)
+    if (typeof this.level.update === 'function') {
+      this.level.update(delta);
+    }
+
     // ---------------------------
     // Apply gravity
     // ---------------------------
@@ -124,11 +129,27 @@ export class GameEngine {
 
     // ---------------------------
     // Ground collision
+    // (Only if a floor platform is actually under the dragon —
+    //  Level 2 has a gap, so we must not float over empty air.)
     // ---------------------------
     if (this.dragon.y >= this.groundLevel) {
-      this.dragon.y = this.groundLevel;
-      this.dragon.velocityY = 0;
-      this.dragon.onGround = true;
+      const standingOnFloor = this.level.platforms.some(
+        (p) =>
+          p.y >= this.groundLevel - 1 &&
+          this.dragon.x + this.dragon.width > p.x + 2 &&
+          this.dragon.x < p.x + p.width - 2,
+      );
+
+      if (standingOnFloor) {
+        this.dragon.y = this.groundLevel;
+        this.dragon.velocityY = 0;
+        this.dragon.onGround = true;
+      } else if (this.dragon.y > this.canvas.height + 40) {
+        // Fell in a gap — gentle respawn at the level start
+        this.dragon.x = this.level.startX ?? 40;
+        this.dragon.y = this.level.startY ?? this.groundLevel;
+        this.dragon.velocityY = 0;
+      }
     }
 
     // ---------------------------
@@ -145,26 +166,47 @@ export class GameEngine {
         this.dragon.y = p.y - this.dragon.height;
         this.dragon.velocityY = 0;
         this.dragon.onGround = true;
+
+        // Ride moving platforms sideways
+        if (p.moving && typeof p.prevX === 'number') {
+          this.dragon.x += p.x - p.prevX;
+        }
       }
     });
 
     // Cute two-frame bob animation
     this.dragon.updateAnimation(delta);
 
-    // Update all enemy types (walker, hopper, floater, …)
-    this.level.enemies.forEach((enemy) => enemy.update(delta));
-
-    // Shared collision for every enemy type — gentle bounce, non-harmful
+    // Update all enemy types (walker, hopper, floater, killable, …)
     this.level.enemies.forEach((enemy) => {
-      if (
+      if (!enemy.defeated) enemy.update(delta);
+    });
+
+    // Enemy bumps — stomp defeat for killable foes, gentle bounce otherwise
+    this.level.enemies.forEach((enemy) => {
+      if (enemy.defeated) return;
+
+      const overlapping =
         this.dragon.x < enemy.x + enemy.width &&
         this.dragon.x + this.dragon.width > enemy.x &&
         this.dragon.y < enemy.y + enemy.height &&
-        this.dragon.y + this.dragon.height > enemy.y
-      ) {
-        this.dragon.x -= 20 * this.dragon.speed;
-        this.dragon.velocityY = -6;
+        this.dragon.y + this.dragon.height > enemy.y;
+
+      if (!overlapping) return;
+
+      const stomping =
+        enemy.isKillable &&
+        this.dragon.velocityY > 0 &&
+        this.dragon.y + this.dragon.height - enemy.y < 18;
+
+      if (stomping && typeof enemy.defeat === 'function') {
+        enemy.defeat();
+        this.dragon.velocityY = -8; // happy bounce after a stomp
+        return;
       }
+
+      this.dragon.x -= 20 * this.dragon.speed;
+      this.dragon.velocityY = -6;
     });
 
     // ---------------------------
