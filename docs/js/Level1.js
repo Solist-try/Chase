@@ -33,7 +33,7 @@ export class Level1 {
     ];
 
     this.enemies = [
-      new WalkerEnemy(200, canvas.height - 75),
+      new WalkerEnemy(200, canvas.height - 84),
       new HopperEnemy(420, canvas.height - 195),
       new FloaterEnemy(150, canvas.height - 260),
     ];
