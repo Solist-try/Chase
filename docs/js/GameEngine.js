@@ -181,32 +181,51 @@ export class GameEngine {
     // Always call update so killable “poof” timers can finish.
     this.level.enemies.forEach((enemy) => enemy.update(delta));
 
-    // Enemy bumps — stomp defeat for killable foes, gentle bounce otherwise
+    // ---------------------------
+    // Dragon stomp + soft bump
+    // ---------------------------
     this.level.enemies.forEach((enemy) => {
-      const stillHere = enemy.alive !== false && !enemy.defeated;
-      if (!stillHere) return;
+      // Skip foes that were already defeated (alive === false)
+      if (enemy.alive === false) return;
 
-      const overlapping =
+      const dragonBottom = this.dragon.y + this.dragon.height;
+      const enemyTop = enemy.y;
+
+      const horizontalOverlap =
         this.dragon.x < enemy.x + enemy.width &&
-        this.dragon.x + this.dragon.width > enemy.x &&
-        this.dragon.y < enemy.y + enemy.height &&
-        this.dragon.y + this.dragon.height > enemy.y;
+        this.dragon.x + this.dragon.width > enemy.x;
 
-      if (!overlapping) return;
+      // Landing on the enemy’s head while falling
+      const verticalStomp =
+        dragonBottom > enemyTop &&
+        dragonBottom < enemyTop + 10 &&
+        this.dragon.velocityY > 0;
 
-      const stomping =
-        enemy.isKillable &&
-        this.dragon.velocityY > 0 &&
-        this.dragon.y + this.dragon.height - enemy.y < 18;
-
-      if (stomping && typeof enemy.defeat === 'function') {
+      // A) Stomp — defeat killable foes and bounce up
+      if (
+        horizontalOverlap &&
+        verticalStomp &&
+        typeof enemy.defeat === 'function'
+      ) {
         enemy.defeat();
-        this.dragon.velocityY = -8; // happy bounce after a stomp
+        this.dragon.velocityY = -10; // bounce up
         return;
       }
 
-      this.dragon.x -= 20 * this.dragon.speed;
-      this.dragon.velocityY = -6;
+      // B) Side bump — only if we are actually touching the body
+      const bodyOverlap =
+        dragonBottom > enemy.y &&
+        this.dragon.y < enemy.y + enemy.height;
+
+      if (
+        enemy.alive !== false &&
+        horizontalOverlap &&
+        bodyOverlap &&
+        !verticalStomp
+      ) {
+        this.dragon.x -= 20 * this.dragon.speed;
+        this.dragon.velocityY = -6;
+      }
     });
 
     // ---------------------------
@@ -297,7 +316,8 @@ export class GameEngine {
       }
     });
 
-    // Draw all enemy types
+    // Draw enemies (KillableEnemy.draw hides itself when not alive,
+    // but still shows a short “poof” flash after a stomp)
     this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
     // Draw dragon (eyes + smile live in Dragon.draw)
