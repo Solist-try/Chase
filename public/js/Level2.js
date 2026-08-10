@@ -29,7 +29,7 @@ export class Level2 {
     };
 
     this.goalText =
-      'Cross the rainbow course! Jump on the boss dragon — 2 touches and you’re out!';
+      'Find the key, open the door, then climb the tower! Jump on the boss dragon — 2 touches and you’re out!';
 
     const groundY = canvas.height - 40;
     this.groundY = groundY;
@@ -79,7 +79,7 @@ export class Level2 {
     };
 
     // -------------------------------------------------
-    // MIDDLE section — moving platforms + breakable block
+    // MIDDLE section — moving platforms + breakable blocks
     // -------------------------------------------------
     this.movingHorizontal = {
       x: 560,
@@ -109,16 +109,36 @@ export class Level2 {
       moveAxis: 'y',
     };
 
-    // Breakable block — disappears when the dragon bumps it from below
-    this.breakableBlock = {
-      x: 700,
-      y: groundY - 170,
-      width: 48,
-      height: 48,
-      color: '#e76f51',
-      breakable: true,
-      broken: false,
-    };
+    // Breakable blocks — bump from below to smash (flash, then gone)
+    this.breakableBlocks = [
+      {
+        x: 660,
+        y: groundY - 170,
+        width: 48,
+        height: 48,
+        color: '#e76f51',
+        breakable: true,
+        broken: false,
+      },
+      {
+        x: 720,
+        y: groundY - 170,
+        width: 48,
+        height: 48,
+        color: '#f4a261',
+        breakable: true,
+        broken: false,
+      },
+      {
+        x: 1000,
+        y: groundY - 150,
+        width: 48,
+        height: 48,
+        color: '#e76f51',
+        breakable: true,
+        broken: false,
+      },
+    ];
 
     // -------------------------------------------------
     // CAVE section — narrow platforms (darker zone overlay)
@@ -161,6 +181,23 @@ export class Level2 {
       color: '#80ed99',
     };
 
+    // -------------------------------------------------
+    // Simple puzzle — key + door (blocks the tower until unlocked)
+    // -------------------------------------------------
+    this.key = {
+      x: 1220 + 28,
+      y: groundY - 130 - 28,
+      collected: false,
+    };
+
+    this.door = {
+      x: 1488,
+      y: groundY - 130,
+      width: 36,
+      height: 130,
+      locked: true,
+    };
+
     this.platforms = [
       ...groundPieces,
       ...leftStack,
@@ -168,7 +205,7 @@ export class Level2 {
       foeShelf,
       this.movingHorizontal,
       this.movingVertical,
-      this.breakableBlock,
+      ...this.breakableBlocks,
       ...cavePlatforms,
       towerApproach,
       ...tower,

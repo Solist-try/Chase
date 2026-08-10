@@ -1,12 +1,9 @@
 // ---------------------------------------------------------
 // Dragon Adventure – Level 2 screen boot
-// Loads the shared game starter, then starts Level 2.
+// Loaded by the router after screens/level2.html is in #app.
 // ---------------------------------------------------------
 
 import './game.js';
 import { Level2 } from './Level2.js';
 
-// Start Level 2 as soon as this screen is ready
-if (document.getElementById('gameCanvas')) {
-  window.startDragonGame(Level2);
-}
+export { Level2 };
