@@ -178,13 +178,13 @@ export class GameEngine {
     this.dragon.updateAnimation(delta);
 
     // Update all enemy types (walker, hopper, floater, killable, …)
-    this.level.enemies.forEach((enemy) => {
-      if (!enemy.defeated) enemy.update(delta);
-    });
+    // Always call update so killable “poof” timers can finish.
+    this.level.enemies.forEach((enemy) => enemy.update(delta));
 
     // Enemy bumps — stomp defeat for killable foes, gentle bounce otherwise
     this.level.enemies.forEach((enemy) => {
-      if (enemy.defeated) return;
+      const stillHere = enemy.alive !== false && !enemy.defeated;
+      if (!stillHere) return;
 
       const overlapping =
         this.dragon.x < enemy.x + enemy.width &&

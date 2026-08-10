@@ -1,46 +1,85 @@
 // ---------------------------------------------------------
 // Dragon Adventure – Killable Enemy
-// A special foe the dragon can defeat (for Level 2)
+// Patrols left and right. Stomp it for a tiny “poof”!
 // ---------------------------------------------------------
 
-export class KillableEnemy {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
+import { BaseEnemy } from './BaseEnemy.js';
 
-    // Friendly size, easy to see
+export class KillableEnemy extends BaseEnemy {
+  constructor(x, y) {
+    // Bright berry body so kids can spot it
+    super(x, y, '#ff4d6d');
+
     this.width = 36;
     this.height = 36;
 
-    // Bright berry color so kids spot it quickly
-    this.color = '#ff4d6d';
+    // Still in the game until stomped
+    this.alive = true;
 
-    // Special flags used by the game engine
+    // Used by the game engine for stomp checks
     this.isKillable = true;
-    this.defeated = false;
 
-    // Tiny idle bob
-    this.timer = 0;
-    this.baseY = y;
+    // Simple left–right patrol
+    this.speed = 1.0;
+    this.direction = 1; // 1 = right, -1 = left
+    this.patrolLeft = x - 40;
+    this.patrolRight = x + 40;
+
+    // “Poof” flash after defeat (milliseconds left)
+    this.poofTimer = 0;
+    this.poofColor = '#fffaf0';
   }
 
+  /**
+   * Move back and forth — but freeze once defeated.
+   */
   update(delta = 16) {
-    if (this.defeated) return;
+    // Keep the poof flash ticking even after defeat
+    if (this.poofTimer > 0) {
+      this.poofTimer -= delta;
+      if (this.poofTimer < 0) this.poofTimer = 0;
+    }
 
-    this.timer += delta;
-    // Soft up-and-down bob while waiting on a platform
-    this.y = this.baseY + Math.sin(this.timer * 0.004) * 3;
+    // Stop all movement when not alive
+    if (!this.alive) return;
+
+    this.x += this.speed * this.direction;
+
+    // Turn around at the ends of the patrol path
+    if (this.x <= this.patrolLeft) {
+      this.x = this.patrolLeft;
+      this.direction = 1;
+    } else if (this.x >= this.patrolRight) {
+      this.x = this.patrolRight;
+      this.direction = -1;
+    }
   }
 
-  /** Call this when the dragon stomps the enemy. */
+  /**
+   * Stomp / defeat — hide the foe and flash a little poof.
+   */
   defeat() {
-    this.defeated = true;
+    if (!this.alive) return;
+
+    this.alive = false;
+    this.poofTimer = 280; // short, cheerful flash
+    this.poofColor = '#ffe566'; // sunny yellow “poof”
   }
 
+  /**
+   * Draw the enemy only while alive.
+   * After defeat, briefly draw a poof flash, then nothing.
+   */
   draw(ctx) {
-    if (this.defeated) return;
+    // Tiny color-flash poof after defeat
+    if (!this.alive) {
+      if (this.poofTimer > 0) {
+        this.#drawPoof(ctx);
+      }
+      return;
+    }
 
-    // Body
+    // Normal body
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x, this.y, this.width, this.height);
 
@@ -53,12 +92,48 @@ export class KillableEnemy {
     ctx.fillRect(this.x + 9, this.y + 11, 3, 3);
     ctx.fillRect(this.x + 25, this.y + 11, 3, 3);
 
-    // Tiny frown so it looks like a "bossy" foe
+    // Tiny frown — a “bossy” look
     ctx.strokeStyle = '#1b2a4a';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(this.x + this.width / 2, this.y + 26, 6, Math.PI + 0.2, -0.2);
     ctx.stroke();
+  }
+
+  /** Soft expanding flash so kids see the poof. */
+  #drawPoof(ctx) {
+    const progress = 1 - this.poofTimer / 280; // 0 → 1
+    const radius = 10 + progress * 18;
+    const alpha = 1 - progress;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha);
+
+    // Outer flash ring
+    ctx.fillStyle = this.poofColor;
+    ctx.beginPath();
+    ctx.arc(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      radius,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Bright white center spark
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      radius * 0.4,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.restore();
   }
 }
 
