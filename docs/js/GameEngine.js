@@ -294,9 +294,92 @@ export class GameEngine {
     });
 
     // ---------------------------
+    // Key + door puzzle (Level 2)
+    // ---------------------------
+    this.#updateKeyAndDoor();
+
+    // ---------------------------
     // Collectibles pickup + HUD
     // ---------------------------
     this.collectPickups();
+  }
+
+  /**
+   * Simple puzzle: grab the key, touch the door to unlock,
+   * then walk through to the final goal platform.
+   */
+  #updateKeyAndDoor() {
+    const key = this.level.key;
+    const door = this.level.door;
+    const dragon = this.dragon;
+
+    // A) Touch the key → collect it
+    if (key && !key.collected) {
+      const keyR = 14;
+      const closestX = Math.max(dragon.x, Math.min(key.x, dragon.x + dragon.width));
+      const closestY = Math.max(dragon.y, Math.min(key.y, dragon.y + dragon.height));
+      const dx = key.x - closestX;
+      const dy = key.y - closestY;
+      if (dx * dx + dy * dy <= keyR * keyR) {
+        key.collected = true;
+        if (this.hud.levelGoal) {
+          this.hud.levelGoal.textContent = 'You found the key! Open the door!';
+        }
+      }
+    }
+
+    if (!door) return;
+
+    const doorW = door.width || 36;
+    const doorH = door.height || 130;
+
+    // B) Touch the door with the key → unlock
+    if (door.locked && key && key.collected) {
+      const touchesDoor =
+        dragon.x < door.x + doorW &&
+        dragon.x + dragon.width > door.x &&
+        dragon.y < door.y + doorH &&
+        dragon.y + dragon.height > door.y;
+
+      if (touchesDoor) {
+        door.locked = false;
+        if (this.hud.levelGoal) {
+          this.hud.levelGoal.textContent = 'Door open! Climb to the goal!';
+        }
+      }
+    }
+
+    // C) Locked door blocks the path to the final goal platform
+    if (door.locked) {
+      this.#resolveLockedDoorCollision(door, doorW, doorH);
+    }
+  }
+
+  /** Push the dragon out of a locked door so they can’t pass. */
+  #resolveLockedDoorCollision(door, doorW, doorH) {
+    const dragon = this.dragon;
+    const overlaps =
+      dragon.x < door.x + doorW &&
+      dragon.x + dragon.width > door.x &&
+      dragon.y < door.y + doorH &&
+      dragon.y + dragon.height > door.y;
+
+    if (!overlaps) return;
+
+    const dragonCenterX = dragon.x + dragon.width / 2;
+    const doorCenterX = door.x + doorW / 2;
+
+    if (dragonCenterX < doorCenterX) {
+      dragon.x = door.x - dragon.width;
+    } else {
+      dragon.x = door.x + doorW;
+    }
+
+    // Keep the dragon inside the world after the shove
+    if (dragon.x < 0) dragon.x = 0;
+    if (dragon.x + dragon.width > this.worldWidth) {
+      dragon.x = this.worldWidth - dragon.width;
+    }
   }
 
   /** Special foe touched the dragon — lose one heart. Two hits = lose. */
@@ -463,6 +546,16 @@ export class GameEngine {
       }
     });
 
+    // Puzzle key (only while not collected)
+    if (this.level.key && !this.level.key.collected) {
+      this.#drawKey(this.level.key);
+    }
+
+    // Puzzle door (looks different when unlocked)
+    if (this.level.door) {
+      this.#drawDoor(this.level.door);
+    }
+
     // Draw enemies
     this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
@@ -494,6 +587,75 @@ export class GameEngine {
         this.canvas.height / 2 + 22,
       );
     }
+  }
+
+  /** Simple gold key — drawn only while not collected. */
+  #drawKey(key) {
+    const bob = Math.sin(this.animTime / 220) * 3;
+    const x = key.x;
+    const y = key.y + bob;
+
+    this.ctx.save();
+    this.ctx.fillStyle = '#ffe566';
+    this.ctx.strokeStyle = '#c9a227';
+    this.ctx.lineWidth = 2;
+
+    // Key ring
+    this.ctx.beginPath();
+    this.ctx.arc(x - 6, y, 8, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Shaft
+    this.ctx.fillRect(x - 2, y - 3, 18, 6);
+
+    // Teeth
+    this.ctx.fillRect(x + 10, y + 3, 4, 6);
+    this.ctx.fillRect(x + 15, y + 3, 3, 4);
+
+    this.ctx.restore();
+  }
+
+  /** Closed door when locked; open doorway when unlocked. */
+  #drawDoor(door) {
+    const w = door.width || 36;
+    const h = door.height || 130;
+
+    this.ctx.save();
+
+    if (door.locked) {
+      // Solid locked door
+      this.ctx.fillStyle = '#8b4513';
+      this.ctx.fillRect(door.x, door.y, w, h);
+
+      this.ctx.fillStyle = '#6b3410';
+      this.ctx.fillRect(door.x + 4, door.y + 8, w - 8, h - 16);
+
+      // Lock plate + keyhole
+      this.ctx.fillStyle = '#ffe566';
+      this.ctx.fillRect(door.x + w - 14, door.y + h * 0.45, 8, 12);
+      this.ctx.fillStyle = '#1b2a4a';
+      this.ctx.beginPath();
+      this.ctx.arc(door.x + w - 10, door.y + h * 0.48, 2.2, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.fillRect(door.x + w - 11, door.y + h * 0.5, 2, 5);
+    } else {
+      // Unlocked — open doorway (frame + ajar panel)
+      this.ctx.fillStyle = '#5c4030';
+      this.ctx.fillRect(door.x, door.y, 6, h); // left frame
+      this.ctx.fillRect(door.x + w - 6, door.y, 6, h); // right frame
+      this.ctx.fillRect(door.x, door.y, w, 8); // top lintel
+
+      // Door swung open (thin panel to the side)
+      this.ctx.fillStyle = '#a36b3e';
+      this.ctx.fillRect(door.x + w - 4, door.y + 8, 10, h - 8);
+
+      // Soft open glow in the passage
+      this.ctx.fillStyle = 'rgba(255, 229, 102, 0.28)';
+      this.ctx.fillRect(door.x + 6, door.y + 8, w - 12, h - 8);
+    }
+
+    this.ctx.restore();
   }
 
   /**

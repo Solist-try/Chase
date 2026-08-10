@@ -29,7 +29,7 @@ export class Level2 {
     };
 
     this.goalText =
-      'Cross the rainbow course! Jump on the boss dragon — 2 touches and you’re out!';
+      'Find the key, open the door, then climb the tower! Jump on the boss dragon — 2 touches and you’re out!';
 
     const groundY = canvas.height - 40;
     this.groundY = groundY;
@@ -179,6 +179,23 @@ export class Level2 {
       width: 80,
       height: 18,
       color: '#80ed99',
+    };
+
+    // -------------------------------------------------
+    // Simple puzzle — key + door (blocks the tower until unlocked)
+    // -------------------------------------------------
+    this.key = {
+      x: 1220 + 28,
+      y: groundY - 130 - 28,
+      collected: false,
+    };
+
+    this.door = {
+      x: 1488,
+      y: groundY - 130,
+      width: 36,
+      height: 130,
+      locked: true,
     };
 
     this.platforms = [
