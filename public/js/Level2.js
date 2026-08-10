@@ -98,7 +98,7 @@ export class Level2 {
 
     // One special killable enemy on the mid-level platform
     this.enemies = [
-      new KillableEnemy(midShelf.x + 40, midShelf.y - 40),
+      new KillableEnemy(midShelf.x + 36, midShelf.y - 48),
     ];
 
     // Safe starting spot on the left ground
