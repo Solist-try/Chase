@@ -172,11 +172,19 @@ export class GameEngine {
       this.#loseGame('void');
     }
 
+    // Tick breakable-block flash timers (color flash after a bump)
+    this.level.platforms.forEach((p) => {
+      if (p.breakable && p.broken && p.flashTimer > 0) {
+        p.flashTimer -= delta;
+        if (p.flashTimer < 0) p.flashTimer = 0;
+      }
+    });
+
     // ---------------------------
     // Platform collisions
     // ---------------------------
     this.level.platforms.forEach((p) => {
-      // Broken blocks are gone
+      // Broken blocks are gone (after the flash finishes)
       if (p.breakable && p.broken) return;
 
       const horizontalOverlap =
@@ -193,6 +201,7 @@ export class GameEngine {
         this.dragon.y > p.y + p.height - 16
       ) {
         p.broken = true;
+        p.flashTimer = 280; // short color-flash bounce
         this.dragon.velocityY = 2; // soft bounce down
         if (this.hud.levelGoal) {
           this.hud.levelGoal.textContent = 'Crash! The block broke!';
@@ -420,9 +429,15 @@ export class GameEngine {
       this.ctx.fillRect(cave.x, 0, cave.width, this.canvas.height);
     }
 
-    // Draw platforms (skip broken breakables)
+    // Draw platforms (skip broken breakables once the flash is done)
     this.level.platforms.forEach((p) => {
-      if (p.breakable && p.broken) return;
+      if (p.breakable && p.broken) {
+        if (p.flashTimer > 0) {
+          this.#drawBreakFlash(p);
+        }
+        return;
+      }
+
       this.ctx.fillStyle = p.color || '#8ED6FF';
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
 
@@ -479,6 +494,40 @@ export class GameEngine {
         this.canvas.height / 2 + 22,
       );
     }
+  }
+
+  /**
+   * Short bounce color-flash when a breakable block is smashed from below.
+   * Brightens, expands a little, then fades out so kids see the smash.
+   */
+  #drawBreakFlash(block) {
+    const duration = 280;
+    const progress = 1 - (block.flashTimer || 0) / duration; // 0 → 1
+    const expand = progress * 10;
+    const alpha = 1 - progress;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = Math.max(0, alpha);
+
+    // Warm flash fill (slightly bigger than the block)
+    this.ctx.fillStyle = '#ffe566';
+    this.ctx.fillRect(
+      block.x - expand / 2,
+      block.y - expand / 2 - progress * 6, // tiny upward bounce
+      block.width + expand,
+      block.height + expand,
+    );
+
+    // Bright center pop
+    this.ctx.fillStyle = '#fffaf0';
+    this.ctx.fillRect(
+      block.x + block.width * 0.2,
+      block.y + block.height * 0.2 - progress * 6,
+      block.width * 0.6,
+      block.height * 0.6,
+    );
+
+    this.ctx.restore();
   }
 
   /** Turn level.background into a canvas fill style. */

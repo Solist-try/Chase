@@ -79,7 +79,7 @@ export class Level2 {
     };
 
     // -------------------------------------------------
-    // MIDDLE section — moving platforms + breakable block
+    // MIDDLE section — moving platforms + breakable blocks
     // -------------------------------------------------
     this.movingHorizontal = {
       x: 560,
@@ -109,16 +109,36 @@ export class Level2 {
       moveAxis: 'y',
     };
 
-    // Breakable block — disappears when the dragon bumps it from below
-    this.breakableBlock = {
-      x: 700,
-      y: groundY - 170,
-      width: 48,
-      height: 48,
-      color: '#e76f51',
-      breakable: true,
-      broken: false,
-    };
+    // Breakable blocks — bump from below to smash (flash, then gone)
+    this.breakableBlocks = [
+      {
+        x: 660,
+        y: groundY - 170,
+        width: 48,
+        height: 48,
+        color: '#e76f51',
+        breakable: true,
+        broken: false,
+      },
+      {
+        x: 720,
+        y: groundY - 170,
+        width: 48,
+        height: 48,
+        color: '#f4a261',
+        breakable: true,
+        broken: false,
+      },
+      {
+        x: 1000,
+        y: groundY - 150,
+        width: 48,
+        height: 48,
+        color: '#e76f51',
+        breakable: true,
+        broken: false,
+      },
+    ];
 
     // -------------------------------------------------
     // CAVE section — narrow platforms (darker zone overlay)
@@ -168,7 +188,7 @@ export class Level2 {
       foeShelf,
       this.movingHorizontal,
       this.movingVertical,
-      this.breakableBlock,
+      ...this.breakableBlocks,
       ...cavePlatforms,
       towerApproach,
       ...tower,
