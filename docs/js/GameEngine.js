@@ -157,12 +157,12 @@ export class GameEngine {
         this.dragon.y = this.groundLevel;
         this.dragon.velocityY = 0;
         this.dragon.onGround = true;
-      } else if (this.dragon.y > this.canvas.height + 40) {
-        // Fell in a gap — gentle respawn at the level start
-        this.dragon.x = this.level.startX ?? 40;
-        this.dragon.y = this.level.startY ?? this.groundLevel;
-        this.dragon.velocityY = 0;
       }
+    }
+
+    // Fell into the void (gap / off the bottom) — out on every level
+    if (this.dragon.y > this.canvas.height + 40) {
+      this.#loseGame('void');
     }
 
     // ---------------------------
@@ -270,16 +270,31 @@ export class GameEngine {
     }
 
     if (this.hearts <= 0) {
-      this.#loseGame();
+      this.#loseGame('foe');
     }
   }
 
-  #loseGame() {
+  /**
+   * End the level as a loss.
+   * @param {'void' | 'foe' | string} [reason]
+   */
+  #loseGame(reason = 'foe') {
     if (this.lost || this.won) return;
     this.lost = true;
+    this.loseReason = reason;
     this.running = false;
+    this.hearts = 0;
+    this.updateHud();
+
+    if (this.hud.levelGoal) {
+      this.hud.levelGoal.textContent =
+        reason === 'void'
+          ? 'Oh no! You fell into the void!'
+          : 'Oh no! The special foe got you!';
+    }
+
     if (typeof this.onLose === 'function') {
-      this.onLose();
+      this.onLose(reason);
     }
   }
 
