@@ -1,137 +1,225 @@
 // ---------------------------------------------------------
 // Dragon Adventure – Level 2
-// Rainbow meadow with stacks, a moving platform, and a gap!
+// A long, multi-section rainbow course (Mario-style!)
+// Left → Middle → Cave → Tower goal
 // ---------------------------------------------------------
 
 import { KillableEnemy } from './KillableEnemy.js';
+import { WalkerEnemy } from './WalkerEnemy.js';
+import { FloaterEnemy } from './FloaterEnemy.js';
 
 export class Level2 {
   constructor(canvas) {
     this.name = 'Level 2';
     this.canvas = canvas;
 
-    // Bright rainbow diagonal sky
+    // Wider than one screen — the camera will follow the dragon
+    this.worldWidth = 1920;
+
+    // Bright rainbow diagonal sky (cave gets a darker tint on top)
     this.background =
       'linear-gradient(135deg, #ff4d6d 0%, #ff9f1c 18%, #ffe566 36%, #80ed99 54%, #00bbf9 72%, #b5179e 100%)';
 
+    // Darker “rainbow cave” band in the middle of the world
+    this.caveZone = {
+      x: 900,
+      width: 420,
+      // Drawn as a soft purple overlay by the game engine
+      tint: 'rgba(40, 16, 70, 0.48)',
+    };
+
     this.goalText =
-      'Jump on the bossy dragon to beat it — but 2 touches and you’re out!';
+      'Cross the rainbow course! Jump on the boss dragon — 2 touches and you’re out!';
 
     const groundY = canvas.height - 40;
+    this.groundY = groundY;
 
-    // Ground with a gap in the middle (kids jump the gap or use the float pad)
-    const gapStart = 290;
-    const gapEnd = 380;
-    const groundLeft = {
-      x: 0,
-      y: groundY,
-      width: gapStart,
-      height: 40,
-      color: '#8ED6FF',
-    };
-    const groundRight = {
-      x: gapEnd,
-      y: groundY,
-      width: canvas.width - gapEnd,
-      height: 40,
-      color: '#8ED6FF',
-    };
+    // -------------------------------------------------
+    // A) Ground (full width of the long world)
+    //    with a small jump-gap in the LEFT section
+    // -------------------------------------------------
+    const leftGapStart = 260;
+    const leftGapEnd = 320;
 
-    // Two tall vertical stacks (stepping stones going up)
+    const groundPieces = [
+      { x: 0, y: groundY, width: leftGapStart, height: 40, color: '#8ED6FF' },
+      {
+        x: leftGapEnd,
+        y: groundY,
+        width: this.worldWidth - leftGapEnd,
+        height: 40,
+        color: '#8ED6FF',
+      },
+    ];
+
+    // -------------------------------------------------
+    // B) LEFT section — two stacked platforms + gap
+    // -------------------------------------------------
     const leftStack = [
-      { x: 70, y: groundY - 70, width: 90, height: 18, color: '#80ed99' },
-      { x: 70, y: groundY - 140, width: 90, height: 18, color: '#80ed99' },
-      { x: 70, y: groundY - 210, width: 90, height: 18, color: '#80ed99' },
+      { x: 80, y: groundY - 80, width: 100, height: 18, color: '#80ed99' },
+      { x: 80, y: groundY - 150, width: 100, height: 18, color: '#80ed99' },
     ];
 
-    const rightStack = [
-      { x: 480, y: groundY - 70, width: 90, height: 18, color: '#ffd166' },
-      { x: 480, y: groundY - 140, width: 90, height: 18, color: '#ffd166' },
-      { x: 480, y: groundY - 210, width: 90, height: 18, color: '#ffd166' },
-    ];
+    // Little helper pad over the left gap
+    const leftGapPad = {
+      x: 270,
+      y: groundY - 70,
+      width: 55,
+      height: 16,
+      color: '#00bbf9',
+    };
 
-    // Mid-level shelf for the special killable enemy
-    const midShelf = {
-      x: 260,
-      y: groundY - 150,
+    // Mid shelf for the special foe (between left and middle)
+    const foeShelf = {
+      x: 380,
+      y: groundY - 140,
       width: 120,
       height: 18,
       color: '#ff8fab',
     };
 
-    // Moving horizontal platform (updated every frame in update())
-    // minX / maxX are the left-edge travel limits
-    this.movingPlatform = {
-      x: 220,
-      y: groundY - 90,
+    // -------------------------------------------------
+    // MIDDLE section — moving platforms + breakable block
+    // -------------------------------------------------
+    this.movingHorizontal = {
+      x: 560,
+      y: groundY - 100,
       width: 110,
       height: 18,
       color: '#c77dff',
-      minX: 180,
-      maxX: 340,
-      speed: 1.1,
-      direction: 1, // 1 = right, -1 = left
+      minX: 540,
+      maxX: 760,
+      speed: 1.2,
+      direction: 1,
       moving: true,
+      moveAxis: 'x',
     };
 
-    // Small floating platform over the gap
-    this.gapPlatform = {
-      x: 310,
-      y: groundY - 240,
-      width: 70,
-      height: 16,
-      color: '#00bbf9',
+    this.movingVertical = {
+      x: 820,
+      y: groundY - 80,
+      width: 90,
+      height: 18,
+      color: '#ffd166',
+      minY: groundY - 200,
+      maxY: groundY - 70,
+      speed: 0.9,
+      direction: -1, // start going up
+      moving: true,
+      moveAxis: 'y',
+    };
+
+    // Breakable block — disappears when the dragon bumps it from below
+    this.breakableBlock = {
+      x: 700,
+      y: groundY - 170,
+      width: 48,
+      height: 48,
+      color: '#e76f51',
+      breakable: true,
+      broken: false,
+    };
+
+    // -------------------------------------------------
+    // CAVE section — narrow platforms (darker zone overlay)
+    // -------------------------------------------------
+    const cavePlatforms = [
+      { x: 960, y: groundY - 60, width: 70, height: 16, color: '#9b5de5' },
+      { x: 1060, y: groundY - 110, width: 60, height: 16, color: '#9b5de5' },
+      { x: 1140, y: groundY - 70, width: 65, height: 16, color: '#7b2cbf' },
+      { x: 1220, y: groundY - 130, width: 55, height: 16, color: '#9b5de5' },
+      { x: 1290, y: groundY - 90, width: 70, height: 16, color: '#7b2cbf' },
+    ];
+
+    // -------------------------------------------------
+    // RIGHT section — tall tower + goal at the top
+    // -------------------------------------------------
+    const towerX = 1520;
+    const tower = [
+      { x: towerX, y: groundY - 70, width: 100, height: 18, color: '#ff9f1c' },
+      { x: towerX + 20, y: groundY - 130, width: 100, height: 18, color: '#ff9f1c' },
+      { x: towerX, y: groundY - 190, width: 100, height: 18, color: '#ff9f1c' },
+      { x: towerX + 20, y: groundY - 250, width: 100, height: 18, color: '#ff9f1c' },
+    ];
+
+    // Final goal platform at the top of the tower
+    this.goalPlatform = {
+      x: towerX - 10,
+      y: groundY - 310,
+      width: 140,
+      height: 20,
+      color: '#ffe566',
+      isGoal: true,
+    };
+
+    // Approach ledge before the tower
+    const towerApproach = {
+      x: 1420,
+      y: groundY - 50,
+      width: 80,
+      height: 18,
+      color: '#80ed99',
     };
 
     this.platforms = [
-      groundLeft,
-      groundRight,
+      ...groundPieces,
       ...leftStack,
-      ...rightStack,
-      midShelf,
-      this.movingPlatform,
-      this.gapPlatform,
+      leftGapPad,
+      foeShelf,
+      this.movingHorizontal,
+      this.movingVertical,
+      this.breakableBlock,
+      ...cavePlatforms,
+      towerApproach,
+      ...tower,
+      this.goalPlatform,
     ];
 
-    // Collectibles arranged in a gentle curved path
-    this.collectibles = this.#makeCurvedCollectibles(canvas);
+    // -------------------------------------------------
+    // C) Collectibles — curved star path + cave bonus cluster
+    // -------------------------------------------------
+    this.collectibles = [
+      ...this.#makeCurvedStars(12),
+      ...this.#makeCaveBonusCluster(),
+    ];
 
-    // One special killable enemy on the mid-level platform
+    // -------------------------------------------------
+    // D) Enemies
+    // -------------------------------------------------
+    const walker = new WalkerEnemy(1100, groundY - 44 - 16);
+    // Keep the snake in the cave
+    walker.patrolLeft = 980;
+    walker.patrolRight = 1280;
+
     this.enemies = [
-      new KillableEnemy(midShelf.x + 36, midShelf.y - 48),
+      new KillableEnemy(foeShelf.x + 36, foeShelf.y - 48),
+      walker,
+      new FloaterEnemy(towerX + 40, groundY - 220),
     ];
 
-    // Safe starting spot on the left ground
+    // Safe start on the left ground
     this.startX = 40;
     this.startY = groundY - 50;
-    this.groundY = groundY;
   }
 
-  /**
-   * Place stars and coins along a curved path kids can follow.
-   */
-  #makeCurvedCollectibles(canvas) {
+  /** 10–12 stars along a long curved rainbow path. */
+  #makeCurvedStars(count = 12) {
     const items = [];
-    const count = 8;
-    const startX = 90;
-    const endX = 560;
-    const baseY = canvas.height - 100;
+    const startX = 100;
+    const endX = 1480;
+    const baseY = this.groundY - 90;
 
     for (let i = 0; i < count; i++) {
-      const t = i / (count - 1); // 0 → 1 along the path
+      const t = i / (count - 1);
       const x = startX + (endX - startX) * t;
-
-      // Curve up in the middle, then gently down (a smiling rainbow arc)
-      const arc = Math.sin(t * Math.PI) * 120;
-      const y = baseY - arc;
-
-      // Mix stars and coins along the path
-      const type = i % 2 === 0 ? 'star' : 'coin';
+      // Two gentle hills along the course
+      const arc = Math.sin(t * Math.PI * 2) * 55 + Math.sin(t * Math.PI) * 40;
+      const y = baseY - arc - 20;
 
       items.push({
         x,
         y,
-        type,
+        type: 'star',
         radius: 14,
         collected: false,
       });
@@ -140,27 +228,66 @@ export class Level2 {
     return items;
   }
 
+  /** Extra coins tucked in the darker cave — a bonus treat! */
+  #makeCaveBonusCluster() {
+    const cx = 1160;
+    const cy = this.groundY - 180;
+    const spots = [
+      [0, 0],
+      [-28, 18],
+      [28, 18],
+      [-14, 40],
+      [14, 40],
+      [0, 58],
+    ];
+
+    return spots.map(([dx, dy]) => ({
+      x: cx + dx,
+      y: cy + dy,
+      type: 'coin',
+      radius: 14,
+      collected: false,
+    }));
+  }
+
   /**
    * Called every frame by the game engine.
-   * Moves the horizontal platform back and forth.
+   * Updates both moving platforms (and remembers prev positions for riding).
    */
   update(_delta = 16) {
-    const p = this.movingPlatform;
+    this.#updateHorizontalPlatform(this.movingHorizontal);
+    this.#updateVerticalPlatform(this.movingVertical);
+  }
+
+  #updateHorizontalPlatform(p) {
     if (!p) return;
-
-    // Remember where we were so the dragon can ride along
     p.prevX = p.x;
+    p.prevY = p.y;
 
-    // Slide sideways
     p.x += p.speed * p.direction;
 
-    // Bounce at the ends of the path
     if (p.x <= p.minX) {
       p.x = p.minX;
       p.direction = 1;
     } else if (p.x >= p.maxX) {
       p.x = p.maxX;
       p.direction = -1;
+    }
+  }
+
+  #updateVerticalPlatform(p) {
+    if (!p) return;
+    p.prevX = p.x;
+    p.prevY = p.y;
+
+    p.y += p.speed * p.direction;
+
+    if (p.y <= p.minY) {
+      p.y = p.minY;
+      p.direction = 1; // go down
+    } else if (p.y >= p.maxY) {
+      p.y = p.maxY;
+      p.direction = -1; // go up
     }
   }
 }

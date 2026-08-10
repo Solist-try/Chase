@@ -36,6 +36,10 @@ export class GameEngine {
     this.onLose = null;
     this._jumpLocked = false;
 
+    // Camera for long levels (Level 2 and friends)
+    this.cameraX = 0;
+    this.worldWidth = level.worldWidth || canvas.width;
+
     // Special foe can touch the dragon twice — then the dragon is out
     this.hearts = 2;
     this.hurtCooldown = 0; // brief invincible time after a hit
@@ -117,11 +121,14 @@ export class GameEngine {
       this.dragon.facing = 1;
     }
 
-    // Keep the dragon on the screen
+    // Keep the dragon inside the world (may be wider than the screen)
     if (this.dragon.x < 0) this.dragon.x = 0;
-    if (this.dragon.x + this.dragon.width > this.canvas.width) {
-      this.dragon.x = this.canvas.width - this.dragon.width;
+    if (this.dragon.x + this.dragon.width > this.worldWidth) {
+      this.dragon.x = this.worldWidth - this.dragon.width;
     }
+
+    // Camera follows the dragon (for long Mario-style courses)
+    this.#updateCamera();
 
     // ---------------------------
     // Jump (only when grounded — no double jumps)
@@ -169,20 +176,48 @@ export class GameEngine {
     // Platform collisions
     // ---------------------------
     this.level.platforms.forEach((p) => {
-      if (
+      // Broken blocks are gone
+      if (p.breakable && p.broken) return;
+
+      const horizontalOverlap =
         this.dragon.x < p.x + p.width &&
-        this.dragon.x + this.dragon.width > p.x &&
+        this.dragon.x + this.dragon.width > p.x;
+
+      // Hit a breakable block from below (classic bump!)
+      if (
+        p.breakable &&
+        !p.broken &&
+        horizontalOverlap &&
+        this.dragon.velocityY < 0 &&
+        this.dragon.y < p.y + p.height &&
+        this.dragon.y > p.y + p.height - 16
+      ) {
+        p.broken = true;
+        this.dragon.velocityY = 2; // soft bounce down
+        if (this.hud.levelGoal) {
+          this.hud.levelGoal.textContent = 'Crash! The block broke!';
+        }
+        return;
+      }
+
+      // Land on top of platform
+      if (
+        horizontalOverlap &&
         this.dragon.y + this.dragon.height > p.y &&
         this.dragon.y + this.dragon.height < p.y + p.height
       ) {
-        // Land on platform
         this.dragon.y = p.y - this.dragon.height;
         this.dragon.velocityY = 0;
         this.dragon.onGround = true;
 
-        // Ride moving platforms sideways
-        if (p.moving && typeof p.prevX === 'number') {
-          this.dragon.x += p.x - p.prevX;
+        // Ride moving platforms (sideways and up/down)
+        if (p.moving) {
+          if (typeof p.prevX === 'number') {
+            this.dragon.x += p.x - p.prevX;
+          }
+          if (typeof p.prevY === 'number') {
+            this.dragon.y += p.y - p.prevY;
+          }
         }
       }
     });
@@ -361,15 +396,41 @@ export class GameEngine {
     }
   }
 
+  #updateCamera() {
+    const viewW = this.canvas.width;
+    const maxCam = Math.max(0, this.worldWidth - viewW);
+    // Keep the dragon a bit left-of-center so kids see what’s ahead
+    const target = this.dragon.x - viewW * 0.35;
+    this.cameraX = Math.max(0, Math.min(target, maxCam));
+  }
+
   render() {
-    // Clear screen (supports solid colors or CSS-like linear-gradient strings)
+    // Screen-space rainbow sky
     this.ctx.fillStyle = this.#backgroundStyle();
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw platforms (including the ground strip from Level1)
+    // World-space drawing (moves with the camera)
+    this.ctx.save();
+    this.ctx.translate(-this.cameraX, 0);
+
+    // Darker “rainbow cave” tint in the middle section
+    const cave = this.level.caveZone;
+    if (cave) {
+      this.ctx.fillStyle = cave.tint || 'rgba(40, 16, 70, 0.45)';
+      this.ctx.fillRect(cave.x, 0, cave.width, this.canvas.height);
+    }
+
+    // Draw platforms (skip broken breakables)
     this.level.platforms.forEach((p) => {
+      if (p.breakable && p.broken) return;
       this.ctx.fillStyle = p.color || '#8ED6FF';
       this.ctx.fillRect(p.x, p.y, p.width, p.height);
+
+      // Little shine on the goal platform
+      if (p.isGoal) {
+        this.ctx.fillStyle = 'rgba(255, 250, 240, 0.45)';
+        this.ctx.fillRect(p.x + 6, p.y + 4, p.width - 12, 6);
+      }
     });
 
     // Draw remaining collectibles
@@ -382,27 +443,26 @@ export class GameEngine {
         const phase = (twinklePhase + index * 0.11) % 1;
         drawCoinCollectible(this.ctx, c.x, c.y, radius, phase);
       } else {
-        // Cute shiny 5-point star sprite (with drawn fallback)
         const phase = (twinklePhase + index * 0.18) % 1;
         drawStarCollectible(this.ctx, c.x, c.y, radius, phase);
       }
     });
 
-    // Draw enemies (KillableEnemy.draw hides itself when not alive,
-    // but still shows a short “poof” flash after a stomp)
+    // Draw enemies
     this.level.enemies.forEach((enemy) => enemy.draw(this.ctx));
 
     // Draw dragon (blink when hurt)
     if (this.hurtCooldown > 0 && Math.floor(this.animTime / 80) % 2 === 0) {
-      this.ctx.save();
       this.ctx.globalAlpha = 0.45;
       this.dragon.draw(this.ctx);
-      this.ctx.restore();
+      this.ctx.globalAlpha = 1;
     } else {
       this.dragon.draw(this.ctx);
     }
 
-    // Win banner
+    this.ctx.restore();
+
+    // Win banner (screen space)
     if (this.won) {
       this.ctx.fillStyle = 'rgba(27, 42, 74, 0.45)';
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
