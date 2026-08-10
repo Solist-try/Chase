@@ -72,6 +72,17 @@ async function loadRoute(routeName) {
   }
   app.innerHTML = html;
 
+  // Level 2 — after HTML is in #app, load js/level2.js and start
+  if (routeName === 'level2') {
+    try {
+      const { Level2 } = await import(`./level2.js?t=${Date.now()}`);
+      window.startDragonGame(Level2);
+    } catch (err) {
+      console.error('Failed to start Level 2:', err);
+    }
+    return;
+  }
+
   // 2) Run scripts declared in the screen HTML (e.g. game.js module).
   const ranScreenScripts = await runScriptsIn(app);
 
