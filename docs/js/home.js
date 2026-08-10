@@ -12,10 +12,19 @@
   };
 
   const startBtn = document.getElementById('startBtn');
+  const level2Btn = document.getElementById('level2Btn');
   const settingsBtn = document.getElementById('settingsBtn');
 
   if (startBtn) {
     startBtn.onclick = () => window.startGame();
+  }
+
+  if (level2Btn) {
+    level2Btn.onclick = () => {
+      if (typeof window.navigateTo === 'function') {
+        window.navigateTo('level2');
+      }
+    };
   }
 
   if (settingsBtn) {
